@@ -15,26 +15,30 @@
  * limitations under the License.
  */
 plugins {
+    java
     calcite.fmpp
     calcite.javacc
     id("com.github.vlsi.ide")
 }
 
+group = "org.apache.calcite"
+version = "1.28.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     api(project(":core"))
     api(project(":linq4j"))
-    api("org.apache.calcite.avatica:avatica-core")
+    api("org.apache.calcite.avatica:avatica-core:1.18.0")
 
-    implementation("com.google.guava:guava")
-    implementation("org.slf4j:slf4j-api")
+    runtimeOnly("mysql:mysql-connector-java:8.0.26")
 
     testImplementation("mysql:mysql-connector-java:8.0.26")
     testImplementation(project(":core", "testClasses"))
-    testImplementation("net.hydromatic:quidem")
-    testImplementation("net.hydromatic:scott-data-hsqldb")
-    testImplementation("org.hsqldb:hsqldb")
-    testImplementation("org.incava:java-diff")
-    testRuntimeOnly("org.slf4j:slf4j-log4j12")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 val fmppMain by tasks.registering(org.apache.calcite.buildtools.fmpp.FmppTask::class) {
@@ -49,7 +53,7 @@ val javaCCMain by tasks.registering(org.apache.calcite.buildtools.javacc.JavaCCT
         it.output.asFileTree.matching { include("**/Parser.jj") }
     }
     inputFile.from(parserFile)
-    packageName.set("org.apache.calcite.sql.parser.ddl")
+    packageName.set("org.apache.calcite.sql.parser.scrambledb")
 }
 
 ide {
@@ -57,4 +61,39 @@ ide {
         generatedJavaSources(javacc.get(), javacc.get().output.get().asFile, sourceSets.named(sourceSet))
 
     generatedSource(javaCCMain, "main")
+}
+
+val mainClass = "org.apache.calcite.jdbc.Driver"
+
+val fatJar = task("fatJar", type = Jar::class) {
+    archiveClassifier.set("all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes("Main-Class" to mainClass)
+    }
+
+    from(configurations.runtimeClasspath.get()
+        .onEach { println("add from dependencies: ${it.name}") }
+        .map { if (it.isDirectory) it else zipTree(it) }) {
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/NOTICE")
+    }
+
+    val sourcesMain = sourceSets.main.get()
+    sourcesMain.allSource.forEach { println("add from sources: ${it.name}") }
+    from(sourcesMain.output)
+}
+
+tasks {
+    "build" {
+        dependsOn(fatJar)
+    }
+}
+
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
 }

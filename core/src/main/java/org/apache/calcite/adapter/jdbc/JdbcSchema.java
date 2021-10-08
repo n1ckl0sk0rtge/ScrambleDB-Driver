@@ -21,11 +21,7 @@ import org.apache.calcite.avatica.MetaImpl;
 import org.apache.calcite.avatica.SqlType;
 import org.apache.calcite.linq4j.function.Experimental;
 import org.apache.calcite.linq4j.tree.Expression;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeImpl;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
-import org.apache.calcite.rel.type.RelProtoDataType;
+import org.apache.calcite.rel.type.*;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
@@ -33,6 +29,7 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.CreateTable;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactory;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
@@ -73,7 +70,7 @@ import static java.util.Objects.requireNonNull;
  * queries against this schema are executed against those tables, pushing down
  * as much as possible of the query logic to SQL.</p>
  */
-public class JdbcSchema implements Schema {
+public class JdbcSchema implements Schema, CreateTable {
   final DataSource dataSource;
   final @Nullable String catalog;
   final @Nullable String schema;
@@ -210,6 +207,7 @@ public class JdbcSchema implements Schema {
     return JdbcUtils.DataSourcePool.INSTANCE.get(url, driverClassName, username,
         password);
   }
+
 
   @Override public boolean isMutable() {
     return false;
@@ -531,6 +529,42 @@ public class JdbcSchema implements Schema {
         // ignore
       }
     }
+  }
+
+  @Override
+  public boolean createTable(String name, RelProtoDataType protoRowType) {
+    Connection connection = null;
+
+    final RelDataTypeFactory typeFactory =
+        new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+
+    try {
+      connection = dataSource.getConnection();
+      Statement statement = connection.createStatement();
+
+      String sqlfunction = "CREATE TABLE";
+
+      RelDataType columns = protoRowType.apply(typeFactory);
+      StringBuilder col = new StringBuilder();
+
+      for (RelDataTypeField column : columns.getFieldList()) {
+        col.append(column.getName()).append(" ").append(column.getType());
+
+        if (column.getIndex() != columns.getFieldList().size() - 1) {
+          col.append(", ");
+        }
+      }
+
+      String sql = sqlfunction + " " + name + " (" + col + ");";
+      statement.execute(sql);
+
+      return (this.getTable(name) != null);
+
+    } catch (SQLException throwables) {
+      throwables.printStackTrace();
+    }
+
+    return false;
   }
 
   /** Schema factory that creates a

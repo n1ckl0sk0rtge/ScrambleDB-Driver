@@ -23,8 +23,6 @@ import com.github.vlsi.gradle.git.dsl.gitignore
 import com.github.vlsi.gradle.properties.dsl.lastEditYear
 import com.github.vlsi.gradle.properties.dsl.props
 import com.github.vlsi.gradle.release.RepositoryType
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApisExtension
 import net.ltgt.gradle.errorprone.errorprone
 import org.apache.calcite.buildtools.buildext.dsl.ParenthesisBalancer
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -41,7 +39,6 @@ plugins {
     id("com.github.autostyle")
     id("org.nosphere.apache.rat")
     id("com.github.spotbugs")
-    id("de.thetaphi.forbiddenapis") apply false
     id("net.ltgt.errorprone") apply false
     id("com.github.vlsi.jandex") apply false
     id("org.owasp.dependencycheck")
@@ -469,7 +466,6 @@ allprojects {
         }
         val sourceSets: SourceSetContainer by project
 
-        apply(plugin = "de.thetaphi.forbiddenapis")
         apply(plugin = "maven-publish")
 
         if (!skipJandex) {
@@ -572,19 +568,6 @@ allprojects {
             }
         }
 
-        configure<CheckForbiddenApisExtension> {
-            failOnUnsupportedJava = false
-            ignoreSignaturesOfMissingClasses = true
-            bundledSignatures.addAll(
-                listOf(
-                    "jdk-unsafe",
-                    "jdk-deprecated",
-                    "jdk-non-portable"
-                )
-            )
-            signaturesFiles = files("$rootDir/src/main/config/forbidden-apis/signatures.txt")
-        }
-
         if (enableErrorprone) {
             apply(plugin = "net.ltgt.errorprone")
             dependencies {
@@ -666,19 +649,6 @@ allprojects {
                     attributes["Implementation-Vendor"] = "Apache Software Foundation"
                     attributes["Implementation-Vendor-Id"] = "org.apache.calcite"
                 }
-            }
-
-            configureEach<CheckForbiddenApis> {
-                excludeJavaCcGenerated()
-                exclude(
-                    "**/org/apache/calcite/adapter/os/Processes${'$'}ProcessFactory.class",
-                    "**/org/apache/calcite/adapter/os/OsAdapterTest.class",
-                    "**/org/apache/calcite/runtime/Resources${'$'}Inst.class",
-                    "**/org/apache/calcite/test/concurrent/ConcurrentTestCommandScript.class",
-                    "**/org/apache/calcite/test/concurrent/ConcurrentTestCommandScript${'$'}ShellCommand.class",
-                    "**/org/apache/calcite/util/Unsafe.class",
-                    "**/org/apache/calcite/test/Unsafe.class"
-                )
             }
 
             configureEach<JavaCompile> {
