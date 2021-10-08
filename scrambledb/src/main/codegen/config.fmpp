@@ -88,6 +88,13 @@ data: {
       "SqlCreateScrambledTable"
     ]
 
+    # List of methods for parsing extensions to "DROP" calls.
+    # Each must accept arguments "(SqlParserPos pos)".
+    # Example: "SqlDropSchema".
+    dropStatementParserMethods: [
+      "SqlDropTable"
+    ]
+
     # List of files in @includes directory that have parser method
     # implementations for parsing custom SQL statements, literals or types
     # given as part of "statementParserMethods", "literalParserMethods" or

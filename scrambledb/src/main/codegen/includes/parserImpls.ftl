@@ -242,3 +242,14 @@ SqlCreate SqlCreateScrambledTable(Span s, boolean replace) :
             tableElementList, query);
     }
 }
+
+SqlDrop SqlDropTable(Span s, boolean replace) :
+{
+    final boolean ifExists;
+    final SqlIdentifier id;
+}
+{
+    <TABLE> ifExists = IfExistsOpt() id = CompoundIdentifier() {
+        return SqlScrambledbNodes.dropTable(s.end(this), ifExists, id);
+    }
+}

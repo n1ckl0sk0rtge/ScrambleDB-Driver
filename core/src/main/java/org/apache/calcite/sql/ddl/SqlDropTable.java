@@ -30,7 +30,7 @@ public class SqlDropTable extends SqlDropObject {
       new SqlSpecialOperator("DROP TABLE", SqlKind.DROP_TABLE);
 
   /** Creates a SqlDropTable. */
-  SqlDropTable(SqlParserPos pos, boolean ifExists, SqlIdentifier name) {
+  public SqlDropTable(SqlParserPos pos, boolean ifExists, SqlIdentifier name) {
     super(OPERATOR, pos, ifExists, name);
   }
 }

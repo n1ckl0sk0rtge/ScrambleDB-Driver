@@ -14,12 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.calcite.schema;
+
 import org.apache.calcite.rel.type.RelProtoDataType;
 
-public interface CreateTable {
+public interface DropTable {
 
-  void createTable(String name, RelProtoDataType protoRowType);
+  void dropTable(String name);
 
   void reloadTablesIntoSchema();
 

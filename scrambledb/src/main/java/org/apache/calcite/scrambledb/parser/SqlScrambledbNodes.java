@@ -16,11 +16,10 @@
  */
 package org.apache.calcite.scrambledb.parser;
 
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.ddl.SqlDropTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 /**
@@ -36,6 +35,12 @@ public class SqlScrambledbNodes {
       SqlNode query) {
     return new SqlCreateTable(pos, replace, ifNotExists, name, columnList,
         query);
+  }
+
+  /** Creates a DROP TABLE. */
+  public static SqlDropTable dropTable(SqlParserPos pos, boolean ifExists,
+      SqlIdentifier name) {
+    return new SqlDropTable(pos, ifExists, name);
   }
 
 }

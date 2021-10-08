@@ -15,11 +15,16 @@
  * limitations under the License.
  */
 package org.apache.calcite.scrambledb.parser;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.*;
+
+import org.apache.calcite.sql.SqlCreate;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlSpecialOperator;
+import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.pretty.SqlPrettyWriter;
 import org.apache.calcite.util.ImmutableNullableList;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,15 +56,6 @@ public class SqlCreateTable extends SqlCreate {
   @SuppressWarnings("nullness")
   @Override public List<SqlNode> getOperandList() {
     return ImmutableNullableList.of(name, columnList, query);
-  }
-
-  public String getSqlQuery() {
-    final StringBuilder buf = new StringBuilder();
-    final SqlWriterConfig writerConfig =
-        SqlPrettyWriter.config().withAlwaysUseParentheses(false);
-    final SqlPrettyWriter w = new SqlPrettyWriter(writerConfig, buf);
-    unparse(w, 0, 0);
-    return buf.toString();
   }
 
   @Override public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
