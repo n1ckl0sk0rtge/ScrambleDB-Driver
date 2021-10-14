@@ -236,10 +236,9 @@ SqlCreate SqlCreateScrambledTable(Span s, boolean replace) :
 {
     <SCRAMBLEDTABLE> ifNotExists = IfNotExistsOpt() id = CompoundIdentifier()
     [ tableElementList = TableElementList() ]
-    [ <AS> query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY) ]
     {
         return SqlScrambledbNodes.createScrambledTable(s.end(this), replace, ifNotExists, id,
-            tableElementList, query);
+            tableElementList);
     }
 }
 

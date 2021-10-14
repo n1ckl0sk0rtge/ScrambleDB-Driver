@@ -493,5 +493,6 @@ public class Frameworks {
     @Override public RelOptTable.@Nullable ViewExpander getViewExpander() {
       return viewExpander;
     }
+
   }
 }

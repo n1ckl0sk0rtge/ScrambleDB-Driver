@@ -154,6 +154,12 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getPlugin(parserFactoryClass, defaultParserFactory);
   }
 
+  @Override public <T> @PolyNull T rewriterFactory(Class<T> rewriterFactoryClass,
+      @PolyNull T defaultRewriterFactory) {
+    return CalciteConnectionProperty.REWRITER_FACTORY.wrap(properties)
+        .getPlugin(rewriterFactoryClass, defaultRewriterFactory);
+  }
+
   @Override public <T> @PolyNull T schemaFactory(Class<T> schemaFactoryClass,
       @PolyNull T defaultSchemaFactory) {
     return CalciteConnectionProperty.SCHEMA_FACTORY.wrap(properties)

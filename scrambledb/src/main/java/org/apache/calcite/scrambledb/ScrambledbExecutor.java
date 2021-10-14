@@ -16,64 +16,19 @@
  */
 package org.apache.calcite.scrambledb;
 
-import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.jdbc.ContextSqlValidator;
-import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelDataTypeImpl;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.schema.ColumnStrategy;
-import org.apache.calcite.schema.CreateTable;
-import org.apache.calcite.schema.DropTable;
-import org.apache.calcite.schema.TranslatableTable;
-import org.apache.calcite.schema.impl.ViewTable;
-import org.apache.calcite.schema.impl.ViewTableMacro;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
-import org.apache.calcite.scrambledb.parser.TableColumn;
 import org.apache.calcite.scrambledb.tasks.CreateTableExecutor;
 import org.apache.calcite.scrambledb.tasks.DropTableExecutor;
 import org.apache.calcite.server.DdlExecutor;
 import org.apache.calcite.server.DdlExecutorImpl;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlUtil;
-import org.apache.calcite.sql.SqlWriterConfig;
-import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
 import org.apache.calcite.sql.ddl.SqlDropObject;
-import org.apache.calcite.sql.dialect.CalciteSqlDialect;
 import org.apache.calcite.sql.parser.SqlAbstractParserImpl;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.scrambledb.SqlScrambledbParserImpl;
-import org.apache.calcite.sql.pretty.SqlPrettyWriter;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.InitializerContext;
-import org.apache.calcite.sql2rel.InitializerExpressionFactory;
-import org.apache.calcite.sql2rel.NullInitializerExpressionFactory;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
-import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.ValidationException;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Util;
-
-import com.google.common.collect.ImmutableList;
 
 import java.io.Reader;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.apache.calcite.util.Static.RESOURCE;
+import java.lang.reflect.Type;
 
 /** Executes ScrambleDB related commands.
  *
@@ -97,6 +52,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
         @Override public DdlExecutor getDdlExecutor() {
           return ScrambledbExecutor.INSTANCE;
         }
+
       };
 
   /** Executes a {@code CREATE SCRAMBLEDTABLE} command. */

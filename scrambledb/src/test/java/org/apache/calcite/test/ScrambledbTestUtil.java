@@ -30,6 +30,7 @@ public class ScrambledbTestUtil {
   static String config =
       "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory; "
           + "parserFactory=org.apache.calcite.scrambledb.ScrambledbExecutor#PARSER_FACTORY;"
+          + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
           + "schema.jdbcDriver=com.mysql.cj.jdbc.Driver;"
           + "schema.jdbcUrl=jdbc:mysql://localhost/test;"
           + "schema.jdbcUser=root;"

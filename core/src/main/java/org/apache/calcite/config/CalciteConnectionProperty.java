@@ -22,6 +22,8 @@ import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.model.JsonSchema;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
+import org.apache.calcite.tools.SqlRewriterFactory;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.HashMap;
@@ -105,6 +107,12 @@ public enum CalciteConnectionProperty implements ConnectionProperty {
    * <p>The name of a class that implements
    * {@link org.apache.calcite.sql.parser.SqlParserImplFactory}. */
   PARSER_FACTORY("parserFactory", Type.PLUGIN, null, false),
+
+  /** SqlRewriter factory.
+   *
+   * <p>The name of a class that implements
+   * {@link SqlRewriterFactory}. */
+  REWRITER_FACTORY("rewriterFactory", Type.PLUGIN, null, false),
 
   /** Name of initial schema. */
   SCHEMA("schema", Type.STRING, null, false),

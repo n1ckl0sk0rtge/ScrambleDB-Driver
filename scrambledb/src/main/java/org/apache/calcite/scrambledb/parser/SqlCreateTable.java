@@ -39,23 +39,21 @@ public class SqlCreateTable extends SqlCreate {
 
   public final SqlIdentifier name;
   public final @Nullable SqlNodeList columnList;
-  public final @Nullable SqlNode query;
 
   public static final SqlOperator OPERATOR =
       new SqlSpecialOperator("CREATE SCRAMBLEDTABLE", SqlKind.CREATE_TABLE);
 
   /** Creates a SqlCreateTable. */
   public SqlCreateTable(SqlParserPos pos, boolean replace, boolean ifNotExists,
-      SqlIdentifier name, @Nullable SqlNodeList columnList, @Nullable SqlNode query) {
+      SqlIdentifier name, @Nullable SqlNodeList columnList) {
     super(OPERATOR, pos, replace, ifNotExists);
     this.name = Objects.requireNonNull(name, "name");
     this.columnList = columnList; // may be null
-    this.query = query; // for "CREATE TABLE ... AS query"; may be null
   }
 
   @SuppressWarnings("nullness")
   @Override public List<SqlNode> getOperandList() {
-    return ImmutableNullableList.of(name, columnList, query);
+    return ImmutableNullableList.of(name, columnList);
   }
 
   @Override public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
@@ -72,11 +70,6 @@ public class SqlCreateTable extends SqlCreate {
         c.unparse(writer, 0, 0);
       }
       writer.endList(frame);
-    }
-    if (query != null) {
-      writer.keyword("AS");
-      writer.newlineAndIndent();
-      query.unparse(writer, 0, 0);
     }
   }
 

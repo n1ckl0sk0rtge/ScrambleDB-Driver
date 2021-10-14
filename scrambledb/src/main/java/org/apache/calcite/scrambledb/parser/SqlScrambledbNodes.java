@@ -31,10 +31,8 @@ public class SqlScrambledbNodes {
 
   /** Creates a CREATE SCRAMBLEDTABLE. */
   public static SqlCreateTable createScrambledTable(SqlParserPos pos, boolean replace,
-      boolean ifNotExists, SqlIdentifier name, SqlNodeList columnList,
-      SqlNode query) {
-    return new SqlCreateTable(pos, replace, ifNotExists, name, columnList,
-        query);
+      boolean ifNotExists, SqlIdentifier name, SqlNodeList columnList) {
+    return new SqlCreateTable(pos, replace, ifNotExists, name, columnList);
   }
 
   /** Creates a DROP TABLE. */

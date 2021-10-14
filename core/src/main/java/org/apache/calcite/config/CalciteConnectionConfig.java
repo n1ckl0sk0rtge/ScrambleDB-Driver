@@ -80,6 +80,11 @@ public interface CalciteConnectionConfig extends ConnectionConfig {
    * is not null, the result is never null. */
   <T> @PolyNull T parserFactory(Class<T> parserFactoryClass,
       @PolyNull T defaultParserFactory);
+  /** Returns the value of {@link CalciteConnectionProperty#REWRITER_FACTORY},
+   * or a default parser if not set. If {@code defaultRewriterFactory}
+   * is not null, the result is never null. */
+  <T> @PolyNull T rewriterFactory(Class<T> rewriterFactoryClass,
+      @PolyNull T defaultRewriterFactory);
   /** Returns the value of {@link CalciteConnectionProperty#SCHEMA_FACTORY},
    * or a default schema factory if not set. If {@code defaultSchemaFactory}
    * is not null, the result is never null. */

@@ -106,6 +106,8 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.SqlRewriterImpl;
+import org.apache.calcite.tools.SqlRewriterImplFactory;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
@@ -623,6 +625,12 @@ public class CalcitePrepareImpl implements CalcitePrepare {
       try {
         sqlNode = parser.parseStmt();
         statementType = getStatementType(sqlNode.getKind());
+
+        final SqlRewriterImplFactory rewriterFactory =
+            config.rewriterFactory(SqlRewriterImplFactory.class, null);
+        SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
+        sqlNode = rewriter.rewrite(sqlNode);
+
       } catch (SqlParseException e) {
         throw new RuntimeException(
             "parse failed: " + e.getMessage(), e);

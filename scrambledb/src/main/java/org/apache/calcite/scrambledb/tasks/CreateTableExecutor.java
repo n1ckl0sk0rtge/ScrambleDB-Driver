@@ -23,40 +23,20 @@ import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelDataTypeImpl;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rel.type.*;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.schema.CreateTable;
-import org.apache.calcite.schema.TranslatableTable;
-import org.apache.calcite.schema.impl.ViewTable;
-import org.apache.calcite.schema.impl.ViewTableMacro;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.scrambledb.parser.TableColumn;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUtil;
-import org.apache.calcite.sql.SqlWriterConfig;
 import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
-import org.apache.calcite.sql.dialect.CalciteSqlDialect;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.pretty.SqlPrettyWriter;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.InitializerContext;
-import org.apache.calcite.sql2rel.InitializerExpressionFactory;
-import org.apache.calcite.sql2rel.NullInitializerExpressionFactory;
-import org.apache.calcite.tools.*;
 import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Util;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,25 +55,7 @@ public class CreateTableExecutor {
     assert pair.left != null;
     assert pair.right != null;
 
-    if (create.query != null) {
-      // A bit of a hack: pretend it's a view, to get its row type
-      final String sql =
-          create.query.toSqlString(CalciteSqlDialect.DEFAULT).getSql();
-      final ViewTableMacro viewTableMacro =
-          ViewTable.viewMacro(pair.left.plus(), sql, pair.left.path(null),
-              context.getObjectPath(), false);
-      final TranslatableTable x = viewTableMacro.apply(ImmutableList.of());
-      queryRowType = x.getRowType(typeFactory);
-
-      if (create.columnList != null
-          && queryRowType.getFieldCount() != create.columnList.size()) {
-        throw SqlUtil.newContextException(
-            create.columnList.getParserPosition(),
-            RESOURCE.columnCountMismatch());
-      }
-    } else {
-      queryRowType = null;
-    }
+    queryRowType = null;
 
     final List<SqlNode> columnList;
 
@@ -169,6 +131,7 @@ public class CreateTableExecutor {
     }
 
     if (pair.left.schema instanceof CreateTable) {
+
       CreateTable createTableSchema = (CreateTable) pair.left.schema;
 
       createTableSchema.createTable(
@@ -181,42 +144,5 @@ public class CreateTableExecutor {
           "Create table functionality is not part of schema");
     }
 
-    if (create.query != null) {
-      populate(create.name, create.query, context);
-    }
-
   }
-
-  /** Populates the table called {@code name} by executing {@code query}. */
-  static void populate(SqlIdentifier name, SqlNode query,
-      CalcitePrepare.Context context) {
-
-    final FrameworkConfig config = Frameworks.newConfigBuilder()
-        .defaultSchema(context.getRootSchema().plus())
-        .build();
-    final Planner planner = Frameworks.getPlanner(config);
-    try {
-      final StringBuilder buf = new StringBuilder();
-      final SqlWriterConfig writerConfig =
-          SqlPrettyWriter.config().withAlwaysUseParentheses(false);
-      final SqlPrettyWriter w = new SqlPrettyWriter(writerConfig, buf);
-      buf.append("INSERT INTO ");
-      name.unparse(w, 0, 0);
-      buf.append(' ');
-      query.unparse(w, 0, 0);
-      final String sql = buf.toString();
-      final SqlNode query1 = planner.parse(sql);
-      final SqlNode query2 = planner.validate(query1);
-      final RelRoot r = planner.rel(query2);
-      final PreparedStatement prepare =
-          context.getRelRunner().prepareStatement(r.rel);
-      int rowCount = prepare.executeUpdate();
-      Util.discard(rowCount);
-      prepare.close();
-    } catch (SqlParseException | ValidationException
-        | RelConversionException | SQLException e) {
-      throw Util.throwAsRuntime(e);
-    }
-  }
-
 }
