@@ -17,18 +17,22 @@
 package org.apache.calcite.scrambledb;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.rel.type.*;
+import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.scrambledb.tasks.CreateTableExecutor;
 import org.apache.calcite.scrambledb.tasks.DropTableExecutor;
 import org.apache.calcite.server.DdlExecutor;
 import org.apache.calcite.server.DdlExecutorImpl;
+import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.ddl.SqlDropObject;
 import org.apache.calcite.sql.parser.SqlAbstractParserImpl;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.scrambledb.SqlScrambledbParserImpl;
+import org.apache.calcite.sql.type.BasicSqlType;
 
 import java.io.Reader;
-import java.lang.reflect.Type;
 
 /** Executes ScrambleDB related commands.
  *
@@ -40,7 +44,9 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
   public static final ScrambledbExecutor INSTANCE = new ScrambledbExecutor();
 
-  protected ScrambledbExecutor() {}
+  public static ScrambledbConfig config = new ScrambledbConfig();
+
+  protected ScrambledbExecutor() {  }
 
   /** Parser factory. */
   public static final SqlParserImplFactory PARSER_FACTORY =
@@ -55,12 +61,27 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
       };
 
-  /** Executes a {@code CREATE SCRAMBLEDTABLE} command. */
+  /** Executes a {@code CREATE TABLE} command. */
   public void execute(SqlCreateTable create,
       CalcitePrepare.Context context) throws
       ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
 
-    CreateTableExecutor.execute(create, context);
+    CreateTableExecutor exec = new CreateTableExecutor(create, context);
+
+    TableColumn linkerColumn = new TableColumn(
+        config.getLinkerName(),
+        SqlNumericLiteral.createCharString(
+            config.getDefaultValue(),
+            SqlParserPos.ZERO),
+        new BasicSqlType(
+            RelDataTypeSystemImpl.DEFAULT,
+            config.getType(),
+            config.getSize()),
+        config.getColumnStrategy()
+    );
+
+    exec.addLinkerColumn(linkerColumn);
+    exec.execute();
   }
 
   /** Executes a {@code DROP TABLE} command. */

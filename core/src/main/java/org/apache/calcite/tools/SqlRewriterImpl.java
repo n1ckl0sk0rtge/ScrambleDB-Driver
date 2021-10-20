@@ -17,22 +17,11 @@
 
 package org.apache.calcite.tools;
 
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.rel.RelRoot;
 
 public interface SqlRewriterImpl {
 
-  SqlNode rewrite(SqlNode query);
-
-  abstract class RewriterRule {
-
-    public SqlNode apply(SqlNode query) {
-      return query;
-    }
-
-    public boolean isApplicable(SqlKind kind) {
-      return kind == SqlKind.OTHER;
-    }
-  }
+  RelRoot rewrite(RelRoot root, CalcitePrepare.Context context);
 
 }

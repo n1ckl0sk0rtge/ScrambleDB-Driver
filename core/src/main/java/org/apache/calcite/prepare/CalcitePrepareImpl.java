@@ -83,31 +83,21 @@ import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.server.CalciteServerStatement;
 import org.apache.calcite.server.DdlExecutor;
-import org.apache.calcite.sql.SqlBinaryOperator;
-import org.apache.calcite.sql.SqlExplainFormat;
-import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.SqlUtil;
+import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.impl.SqlParserImpl;
 import org.apache.calcite.sql.type.ExtraSqlTypes;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlOperatorTables;
+import org.apache.calcite.sql.util.SqlString;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlRexConvertletTable;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.sql2rel.StandardConvertletTable;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.SqlRewriterImpl;
-import org.apache.calcite.tools.SqlRewriterImplFactory;
+import org.apache.calcite.sql2rel.*;
+import org.apache.calcite.tools.*;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
@@ -131,6 +121,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collector;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 import static org.apache.calcite.util.Static.RESOURCE;
@@ -607,6 +598,7 @@ public class CalcitePrepareImpl implements CalcitePrepare {
     final RelDataType x;
     final Prepare.PreparedResult preparedResult;
     final Meta.StatementType statementType;
+
     if (query.sql != null) {
       final CalciteConnectionConfig config = context.config();
       SqlParser.Config parserConfig = parserConfig()
@@ -625,12 +617,6 @@ public class CalcitePrepareImpl implements CalcitePrepare {
       try {
         sqlNode = parser.parseStmt();
         statementType = getStatementType(sqlNode.getKind());
-
-        final SqlRewriterImplFactory rewriterFactory =
-            config.rewriterFactory(SqlRewriterImplFactory.class, null);
-        SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
-        sqlNode = rewriter.rewrite(sqlNode);
-
       } catch (SqlParseException e) {
         throw new RuntimeException(
             "parse failed: " + e.getMessage(), e);
@@ -1032,6 +1018,11 @@ public class CalcitePrepareImpl implements CalcitePrepare {
       final List<Materialization> materializations = ImmutableList.of();
       final List<CalciteSchema.LatticeEntry> lattices = ImmutableList.of();
       root = optimize(root, materializations, lattices);
+
+      final SqlRewriterImplFactory rewriterFactory =
+          context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+      SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
+      root = rewriter.rewrite(root, context);
 
       if (timingTracer != null) {
         timingTracer.traceTime("end optimization");

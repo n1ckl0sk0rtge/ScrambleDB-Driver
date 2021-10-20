@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.parser;
+package org.apache.calcite.schema;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.sql.SqlNode;
 
 import com.google.common.base.Preconditions;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -28,12 +29,14 @@ import java.util.Objects;
  * Class to define Columns in a table.
  */
 public class TableColumn {
-  final SqlNode expr;
+  final String name;
+  final @Nullable SqlNode expr;
   final RelDataType type;
   final ColumnStrategy strategy;
 
-  public TableColumn(SqlNode expr, RelDataType type,
+  public TableColumn(String name, @Nullable SqlNode expr, RelDataType type,
       ColumnStrategy strategy) {
+    this.name = name;
     this.expr = expr;
     this.type = type;
     this.strategy = Objects.requireNonNull(strategy, "strategy");
@@ -43,7 +46,11 @@ public class TableColumn {
             || expr != null);
   }
 
-  public SqlNode getExpr() {
+  public String getName() {
+    return name;
+  }
+
+  public @Nullable SqlNode getExpr() {
     return expr;
   }
 
@@ -58,9 +65,9 @@ public class TableColumn {
   /**
    * Return TableColumn of a given table.
    */
-  public static TableColumn of(SqlNode expr, RelDataType type,
+  public static TableColumn of(String name, @Nullable SqlNode expr, RelDataType type,
       ColumnStrategy strategy) {
-    return new TableColumn(expr, type, strategy);
+    return new TableColumn(name, expr, type, strategy);
   }
 
 }

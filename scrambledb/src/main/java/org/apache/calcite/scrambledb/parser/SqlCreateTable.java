@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Parse tree for {@code CREATE SCRAMBLEDTABLE} statement.
+ * Parse tree for {@code CREATE TABLE} statement.
  */
 public class SqlCreateTable extends SqlCreate {
 
@@ -41,24 +41,25 @@ public class SqlCreateTable extends SqlCreate {
   public final @Nullable SqlNodeList columnList;
 
   public static final SqlOperator OPERATOR =
-      new SqlSpecialOperator("CREATE SCRAMBLEDTABLE", SqlKind.CREATE_TABLE);
+      new SqlSpecialOperator("CREATE TABLE", SqlKind.CREATE_TABLE);
 
   /** Creates a SqlCreateTable. */
   public SqlCreateTable(SqlParserPos pos, boolean replace, boolean ifNotExists,
       SqlIdentifier name, @Nullable SqlNodeList columnList) {
     super(OPERATOR, pos, replace, ifNotExists);
     this.name = Objects.requireNonNull(name, "name");
-    this.columnList = columnList; // may be null
+    this.columnList = columnList;
   }
 
   @SuppressWarnings("nullness")
   @Override public List<SqlNode> getOperandList() {
+    assert columnList != null;
     return ImmutableNullableList.of(name, columnList);
   }
 
   @Override public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("CREATE");
-    writer.keyword("SCRAMBLEDTABLE");
+    writer.keyword("TABLE");
     if (ifNotExists) {
       writer.keyword("IF NOT EXISTS");
     }

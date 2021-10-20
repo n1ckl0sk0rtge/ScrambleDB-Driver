@@ -61,6 +61,8 @@ import org.apache.calcite.sql2rel.InitializerExpressionFactory;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
+import org.apache.calcite.tools.SqlRewriterImpl;
+import org.apache.calcite.tools.SqlRewriterImplFactory;
 import org.apache.calcite.util.Holder;
 import org.apache.calcite.util.TryThreadLocal;
 import org.apache.calcite.util.trace.CalciteTimingTracer;
@@ -249,6 +251,12 @@ public abstract class Prepare {
 
     RelRoot root =
         sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
+
+    final SqlRewriterImplFactory rewriterFactory =
+        context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+    SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
+    root = rewriter.rewrite(root, context);
+
     Hook.CONVERTED.run(root.rel);
 
     if (timingTracer != null) {

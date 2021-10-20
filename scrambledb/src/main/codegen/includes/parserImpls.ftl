@@ -234,10 +234,10 @@ SqlCreate SqlCreateScrambledTable(Span s, boolean replace) :
     SqlNode query = null;
 }
 {
-    <SCRAMBLEDTABLE> ifNotExists = IfNotExistsOpt() id = CompoundIdentifier()
+    <TABLE> ifNotExists = IfNotExistsOpt() id = CompoundIdentifier()
     [ tableElementList = TableElementList() ]
     {
-        return SqlScrambledbNodes.createScrambledTable(s.end(this), replace, ifNotExists, id,
+        return SqlStatementsNodes.createTable(s.end(this), replace, ifNotExists, id,
             tableElementList);
     }
 }
@@ -249,6 +249,6 @@ SqlDrop SqlDropTable(Span s, boolean replace) :
 }
 {
     <TABLE> ifExists = IfExistsOpt() id = CompoundIdentifier() {
-        return SqlScrambledbNodes.dropTable(s.end(this), ifExists, id);
+        return SqlStatementsNodes.dropTable(s.end(this), ifExists, id);
     }
 }

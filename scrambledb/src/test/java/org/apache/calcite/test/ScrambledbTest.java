@@ -18,17 +18,8 @@ package org.apache.calcite.test;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -44,11 +35,11 @@ public class ScrambledbTest {
     Connection connection = ScrambledbTestUtil.getConnection();
     Statement statement = connection.createStatement();
 
-    boolean b = statement.execute("create scrambledtable t (i int not null)");
+    boolean b = statement.execute("create table t (i int default 1, m varchar(25))");
     assertThat(b, is(false));
-    int x = statement.executeUpdate("insert into t values 1");
+    int x = statement.executeUpdate("insert into t (i, m) values (1, 'hello')");
     assertThat(x, is(1));
-    x = statement.executeUpdate("insert into t values 3");
+    x = statement.executeUpdate("insert into t (i, m) values (3, 'world')");
     assertThat(x, is(1));
     try (ResultSet r = statement.executeQuery("select sum(i) from t")) {
       assertThat(r.next(), is(true));

@@ -524,29 +524,34 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
     }
   }
 
-  @Override public void createTable(String name, RelProtoDataType protoRowType) {
-
-    final RelDataTypeFactory typeFactory =
-        new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+  @Override public void createTable(String name, ImmutableList<TableColumn> columns) {
 
     try {
       Connection connection = dataSource.getConnection();
       Statement statement = connection.createStatement();
 
-      String sqlfunction = "CREATE TABLE";
+      String sqlFunction = "CREATE TABLE";
 
-      RelDataType columns = protoRowType.apply(typeFactory);
       StringBuilder col = new StringBuilder();
+      Integer i = 0;
 
-      for (RelDataTypeField column : columns.getFieldList()) {
-        col.append(column.getName()).append(" ").append(column.getType());
-
-        if (column.getIndex() != columns.getFieldList().size() - 1) {
+      for (TableColumn c : columns) {
+        i++;
+        col.append(c.getName())
+            .append(" ")
+            .append(c.getType());
+        if (c.getStrategy() != ColumnStrategy.NULLABLE) {
+          col.append(" ").append(c.getStrategy());
+        }
+        if (c.getExpr() != null) {
+          col.append(" ").append(c.getExpr().toString());
+        }
+        if (i < columns.size()) {
           col.append(", ");
         }
       }
 
-      String sql = sqlfunction + " " + name + " (" + col + ");";
+      String sql = sqlFunction + " " + name + " (" + col + ");";
       statement.execute(sql);
 
     } catch (SQLException throwables) {

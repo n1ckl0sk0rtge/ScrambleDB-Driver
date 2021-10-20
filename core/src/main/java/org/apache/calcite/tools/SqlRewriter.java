@@ -17,14 +17,15 @@
 
 package org.apache.calcite.tools;
 
-import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.rel.RelRoot;
 
 public class SqlRewriter implements SqlRewriterImpl{
 
   protected SqlRewriter() { }
 
   @Override
-  public SqlNode rewrite(SqlNode query) {
-    return query;
+  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
+    return root;
   }
 }

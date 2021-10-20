@@ -15,35 +15,16 @@
  * limitations under the License.
  */
 
-package org.apache.calcite.scrambledb.rewriter;
+package org.apache.calcite.tools;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.scrambledb.rewriter.rules.ScrambledbInsertRule;
-import org.apache.calcite.tools.SqlRewriterImpl;
-import org.apache.calcite.tools.SqlRewriterRule;
+import org.apache.calcite.sql.SqlKind;
 
-import java.util.ArrayList;
-import java.util.List;
+public interface SqlRewriterRule {
 
-public class ScrambledbRewriter implements SqlRewriterImpl {
+    RelNode apply(RelNode node, CalcitePrepare.Context context);
 
-  private final List<SqlRewriterRule> rules = new ArrayList<>();
-
-  ScrambledbRewriter() {
-    rules.add(new ScrambledbInsertRule());
-  }
-
-  @Override
-  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
-
-    for (SqlRewriterRule rule : rules) {
-      if (rule.isApplicable(root.kind)) {
-        root = RelRoot.of(rule.apply(root.rel, context), root.kind);
-      }
-    }
-    return root;
-  }
+    boolean isApplicable(SqlKind kind);
 
 }

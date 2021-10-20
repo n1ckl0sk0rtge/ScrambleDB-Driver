@@ -15,11 +15,12 @@
  * limitations under the License.
  */
 package org.apache.calcite.schema;
-import org.apache.calcite.rel.type.RelProtoDataType;
+import com.google.common.collect.ImmutableList;
+
 
 public interface CreateTable {
 
-  void createTable(String name, RelProtoDataType protoRowType);
+  void createTable(String name, ImmutableList<TableColumn> columns);
 
   void reloadTablesIntoSchema();
 

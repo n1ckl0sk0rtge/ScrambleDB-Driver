@@ -25,12 +25,12 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 /**
  * Utilities concerning {@link org.apache.calcite.sql.SqlNode} for ScrambleDB.
  */
-public class SqlScrambledbNodes {
+public class SqlStatementsNodes {
 
-  private SqlScrambledbNodes() {  }
+  private SqlStatementsNodes() {  }
 
-  /** Creates a CREATE SCRAMBLEDTABLE. */
-  public static SqlCreateTable createScrambledTable(SqlParserPos pos, boolean replace,
+  /** Creates a CREATE TABLE. */
+  public static SqlCreateTable createTable(SqlParserPos pos, boolean replace,
       boolean ifNotExists, SqlIdentifier name, SqlNodeList columnList) {
     return new SqlCreateTable(pos, replace, ifNotExists, name, columnList);
   }
