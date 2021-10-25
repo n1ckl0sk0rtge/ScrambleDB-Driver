@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.scrambledb;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.schema.TableColumn;
@@ -64,9 +66,16 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
   /** Executes a {@code CREATE TABLE} command. */
   public void execute(SqlCreateTable create,
       CalcitePrepare.Context context) throws
-      ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
+      Exception {
 
     CreateTableExecutor exec = new CreateTableExecutor(create, context);
+
+    /* Create an empty table with the given name
+     * and the given columns.
+     * That ensures, that the validator can validate (semantic)
+     * sql queries against this table.
+     */
+    exec.execute();
 
     TableColumn linkerColumn = new TableColumn(
         config.getLinkerName(),
@@ -80,8 +89,13 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
         config.getColumnStrategy()
     );
 
-    exec.addLinkerColumn(linkerColumn);
-    exec.execute();
+    for (TableColumn column : exec.columns) {
+      exec.executeWith(exec.getName() + "_" + column.getName(),
+          ImmutableList.<TableColumn>builder()
+          .add(linkerColumn)
+          .add(column)
+          .build());
+    }
   }
 
   /** Executes a {@code DROP TABLE} command. */

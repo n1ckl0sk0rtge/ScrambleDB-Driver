@@ -15,20 +15,10 @@
  * limitations under the License.
  */
 
-package org.apache.calcite.tools;
+package org.apache.calcite.scrambledb.rewriter.rules;
 
-import com.google.common.collect.ImmutableList;
+public class ScrambledbSelectRule {
 
-import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.rel.RelRoot;
+  //TODO: define Select rule to rewrite select statements
 
-
-public class SqlRewriter implements SqlRewriterImpl{
-
-  protected SqlRewriter() { }
-
-  @Override
-  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
-    return root;
-  }
 }

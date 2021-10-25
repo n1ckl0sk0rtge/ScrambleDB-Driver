@@ -553,7 +553,6 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
 
       String sql = sqlFunction + " " + name + " (" + col + ");";
       statement.execute(sql);
-
     } catch (SQLException throwables) {
       throwables.printStackTrace();
     }

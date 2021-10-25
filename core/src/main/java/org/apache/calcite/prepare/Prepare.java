@@ -46,12 +46,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.schema.Wrapper;
 import org.apache.calcite.schema.impl.ModifiableViewTable;
 import org.apache.calcite.schema.impl.StarTable;
-import org.apache.calcite.sql.SqlExplain;
-import org.apache.calcite.sql.SqlExplainFormat;
-import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorCatalogReader;
@@ -252,11 +247,6 @@ public abstract class Prepare {
     RelRoot root =
         sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
 
-    final SqlRewriterImplFactory rewriterFactory =
-        context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
-    SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
-    root = rewriter.rewrite(root, context);
-
     Hook.CONVERTED.run(root.rel);
 
     if (timingTracer != null) {
@@ -289,6 +279,12 @@ public abstract class Prepare {
     // Structured type flattening, view expansion, and plugging in physical
     // storage.
     root = root.withRel(flattenTypes(root.rel, true));
+
+    // SQL Rewriter
+    final SqlRewriterImplFactory rewriterFactory =
+        context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+    SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
+    root = rewriter.rewrite(root, context);
 
     if (this.context.config().forceDecorrelate()) {
       // Sub-query decorrelation.
@@ -323,6 +319,7 @@ public abstract class Prepare {
     if (!root.kind.belongsTo(SqlKind.DML)) {
       root = root.withKind(sqlNodeOriginal.getKind());
     }
+
     return implement(root);
   }
 

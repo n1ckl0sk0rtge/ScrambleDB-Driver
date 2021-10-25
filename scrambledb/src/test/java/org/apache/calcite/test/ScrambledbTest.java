@@ -37,9 +37,11 @@ public class ScrambledbTest {
 
     boolean b = statement.execute("create table t (i int default 1, m varchar(25))");
     assertThat(b, is(false));
+    int y = statement.executeUpdate("insert into t (i) values (1)");
+    assertThat(y, is(1));
     int x = statement.executeUpdate("insert into t (i, m) values (1, 'hello')");
     assertThat(x, is(1));
-    x = statement.executeUpdate("insert into t (i, m) values (3, 'world')");
+    x = statement.executeUpdate("insert into t values (3, 'world')");
     assertThat(x, is(1));
     try (ResultSet r = statement.executeQuery("select sum(i) from t")) {
       assertThat(r.next(), is(true));

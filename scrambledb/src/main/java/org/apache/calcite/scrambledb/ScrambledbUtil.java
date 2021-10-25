@@ -60,6 +60,18 @@ public class ScrambledbUtil {
     return Pair.of(schema, name);
   }
 
+  public  static CalciteSchema schema(CalcitePrepare.Context context, boolean mutable) {
+    final List<String> path = context.getDefaultSchemaPath();
+
+    CalciteSchema schema = mutable ? context.getMutableRootSchema()
+        : context.getRootSchema();
+    for (String p : path) {
+      assert schema != null;
+      schema = schema.getSubSchema(p, true);
+    }
+    return schema;
+  }
+
   /**
    * Returns the SqlValidator with the given {@code context} schema
    * and type factory.

@@ -19,12 +19,12 @@ package org.apache.calcite.scrambledb.rewriter.rules;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.adapter.enumerable.EnumerableRelImplementor;
-import org.apache.calcite.adapter.enumerable.JavaRelImplementor;
 import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.linq4j.Queryable;
 import org.apache.calcite.plan.Convention;
-import org.apache.calcite.plan.RelImplementor;
-import org.apache.calcite.plan.RelOptQuery;
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.hint.RelHint;
@@ -36,22 +36,17 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.scrambledb.ScrambledbConfig;
+import org.apache.calcite.schema.*;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
+import org.apache.calcite.scrambledb.ScrambledbUtil;
+import org.apache.calcite.scrambledb.rewriter.ScrambledbDistinctRelRunner;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.SqlRewriterRule;
-
-import org.apache.calcite.util.Pair;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ScrambledbInsertRule implements SqlRewriterRule {
 
@@ -67,8 +62,12 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     *
     *   TRANSFORM TO
     *
-    *   LogicalTableModify(table=[[adhoc, T]], operation=[INSERT], flattened=[false])
-    *    LogicalValues(tuples=[[{<unlinkable_pseudonym>, 1, 'hello' }]])
+    *   LogicalTableModify(table=[[adhoc, T_I]], operation=[INSERT], flattened=[false])
+    *    LogicalValues(tuples=[[{<unlinkable_pseudonym>, 1 }]])
+    *
+    *   LogicalTableModify(table=[[adhoc, T_M]], operation=[INSERT], flattened=[false])
+    *    LogicalValues(tuples=[[{<unlinkable_pseudonym>, 'hello' }]])
+    *
     *
     * - With column specification
     *
@@ -78,83 +77,142 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     *
     *   TRANSFORM TO
     *
-    *   LogicalTableModify(table=[[adhoc, T]], operation=[INSERT], flattened=[false])
-    *     LogicalProject(linkerID=[$0], I=[$1], M=[$2])
-    *       LogicalValues(tuples=[[{<unlinkable_pseudonym>, 1, 'hello' }]])
+    *   LogicalTableModify(table=[[adhoc, T_I]], operation=[INSERT], flattened=[false])
+    *     LogicalProject(linkerID=[$0], I=[$1])
+    *       LogicalValues(tuples=[[{<unlinkable_pseudonym>, 1 }]])
+    *
+    *   LogicalTableModify(table=[[adhoc, T_M]], operation=[INSERT], flattened=[false])
+    *     LogicalProject(linkerID=[$0], M=[$1])
+    *       LogicalValues(tuples=[[{<unlinkable_pseudonym>, 'hello' }]])
     *
     */
+
+    LogicalTableModify logicalTableModify = (LogicalTableModify) contains(node, LogicalTableModify.class);
+    assert logicalTableModify != null;
+    RelOptTable tableDefinition = logicalTableModify.getTable();
+    List<String> qualifiedName = tableDefinition.getQualifiedName();
+    assert qualifiedName.get(1) != null;
+    String rootTableName = qualifiedName.get(1);
 
     LogicalValues logicalValues = containsLogicalValue(node);
     assert logicalValues != null;
     ImmutableList<ImmutableList<RexLiteral>> tuples = logicalValues.getTuples();
 
-    String CRYPTO_VALUE = "xbjsak8123";
-    RexBuilder rexBuilder = new RexBuilder(context.getTypeFactory());
-    RexLiteral rex = rexBuilder.makeLiteral(CRYPTO_VALUE);
-
-    ArrayList<ImmutableList<RexLiteral>> newTupleList = new ArrayList<>();
-    for (int i = 0; i < tuples.size(); i++) {
-      ArrayList<RexLiteral> line = new ArrayList<>();
-      line.add(rex);
-      for (int j = 0; j < tuples.get(i).size(); j++) {
-        line.add(tuples.get(i).get(j));
-      }
-      newTupleList.add(ImmutableList.copyOf(line));
-    }
-    ImmutableList<ImmutableList<RexLiteral>> newTuples = ImmutableList.copyOf(newTupleList);
+    LogicalProject logicalProject = containsLogicalProject(node);
 
     RelDataTypeFactory.Builder relDataTypeBuilder =
         new RelDataTypeFactory.Builder(context.getTypeFactory());
-    relDataTypeBuilder
-        .addAll(ScrambledbExecutor.config.getLinkerRelDataTypeField())
-        .addAll(logicalValues.getRowType().getFieldList());
 
-    logicalValues = new LogicalValues(
-        logicalValues.getCluster(),
-        logicalValues.getCluster().traitSetOf(Convention.NONE),
-        relDataTypeBuilder.build(), newTuples);
+    for (int i = 0; i < tuples.size(); i++) {
+      // new line in the table
+      List<RexLiteral> linker = getLinkers(tuples.size(), context);
+      for (int j = 0; j < tuples.get(i).size(); j++) {
+        // new value in table (in column)
+        RelDataTypeField currentValueRelDataType = logicalValues.getRowType().getFieldList().get(j);
+        // define new type list
+        relDataTypeBuilder
+            // add linker type from config
+            .addAll(ScrambledbExecutor.config.getLinkerRelDataTypeField())
+            // add value type from given logical value
+            .add(currentValueRelDataType);
+        // define values
+        logicalValues = new LogicalValues(
+            logicalValues.getCluster(),
+            logicalValues.getCluster().traitSetOf(Convention.NONE),
+            relDataTypeBuilder.build(),
+            ImmutableList.<ImmutableList<RexLiteral>>builder()
+                .add(ImmutableList.<RexLiteral>builder()
+                    .add(linker.get(j))
+                    .add(tuples.get(i).get(j))
+                    .build())
+                .build());
 
-    LogicalProject logicalProject = containsLogicalProject(node);
+        if (logicalProject != null) {
+          List<RexNode> projects = logicalProject.getProjects();
 
-    if (logicalProject != null) {
-      List<RexNode> projects = logicalProject.getProjects();
+          // define Reference Node
+          RexNode linkerReference = new RexInputRef(0, ScrambledbExecutor.config.getLinkerRelDataType());
 
-      RexNode linkerColumn = projects.get(0);
-      RexNode newReference = new RexInputRef(0, linkerColumn.getType());
+          List<RexNode> newProjects = ImmutableList.<RexNode>builder()
+              .add(linkerReference)
+              // get the j project element
+              .add(incrementReferences(projects.get(j)))
+              .build();
 
-      List<RexInputRef> incrementedReferences =
-          tryIncrementReferences(projects.subList(1, projects.size()));
-      assert incrementedReferences != null;
+          logicalProject = LogicalProject.create(
+              logicalValues,
+              logicalProject.getHints(),
+              newProjects,
+              logicalValues.getRowType().getFieldNames());
 
-      List<RexNode> newProjects = ImmutableList.<RexNode>builder()
-          .add(newReference)
-          .addAll(incrementedReferences)
-          .build();
+        } else {
+          // define Reference Node
+          RexNode linkerReference = new RexInputRef(0,
+              ScrambledbExecutor.config.getLinkerRelDataType());
 
-      logicalProject = new LogicalProject(
-          logicalProject.getCluster(),
-          logicalProject.getTraitSet(),
-          logicalProject.getHints(),
-          logicalValues,
-          newProjects,
-          logicalProject.getRowType());
+          RexNode valueReference = new RexInputRef(1,
+              currentValueRelDataType.getType());
 
-    } else {
-      // TODO: Create a default logical project that will be inserted by default
+          List<RexNode> newProjects = ImmutableList.<RexNode>builder()
+              .add(linkerReference)
+              .add(valueReference)
+              .build();
+
+          //TODO: find out and define hints
+          RelHint a = RelHint.builder("").build();
+
+          logicalProject = LogicalProject.create(
+              logicalValues,
+              ImmutableList.of(a),
+              newProjects,
+              logicalValues.getRowType().getFieldNames());
+
+        }
+
+        CalciteSchema schema = ScrambledbUtil.schema(context, true);
+        // if Calcite is connected to a data source a schema should exist.
+        // if not, an error would raise lines before.
+        assert schema != null;
+
+        String columnName = logicalValues.getRowType().getFieldNames().get(1);
+        String subTableName = ScrambledbExecutor
+            .config.createSubtableString(rootTableName, columnName);
+
+        Table table = schema.schema.getTable(subTableName);
+        // this table should exist, because it was self created by create table
+        // and there are no other operations allowed that delete sub-tables.
+        assert table != null;
+
+        RelOptTable to = RelOptTableImpl.create(tableDefinition.getRelOptSchema(),
+            logicalValues.getRowType(),
+            ImmutableList.of(
+                logicalValues.getRowType().getFieldNames().get(0),
+                subTableName),
+            table,
+            tableDefinition.getExpression(Queryable.class));
+
+        node = new LogicalTableModify(
+            logicalTableModify.getCluster(),
+            logicalTableModify.getTraitSet(),
+            to,
+            logicalTableModify.getCatalogReader(),
+            logicalProject,
+            logicalTableModify.getOperation(),
+            logicalTableModify.getUpdateColumnList(),
+            logicalTableModify.getSourceExpressionList(),
+            logicalTableModify.isFlattened());
+
+        System.out.println(node.explain());
+
+        //TODO: try to connect nodes to one operation
+        try {
+          ScrambledbDistinctRelRunner.runRelQuery(RelRoot.of(node, SqlKind.INSERT), context);
+        } catch (Exception e) {
+
+        }
+
+      }
     }
-
-    LogicalTableModify insertRelQuery = (LogicalTableModify) contains(node, LogicalTableModify.class);
-
-    node = new LogicalTableModify(
-        insertRelQuery.getCluster(), //TODO
-        insertRelQuery.getTraitSet(),
-        insertRelQuery.getTable(),
-        insertRelQuery.getCatalogReader(),
-        logicalProject,
-        insertRelQuery.getOperation(),
-        insertRelQuery.getUpdateColumnList(),
-        insertRelQuery.getSourceExpressionList(),
-        insertRelQuery.isFlattened());
 
     return node;
   }
@@ -164,25 +222,51 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     return kind == SqlKind.INSERT;
   }
 
-  private @Nullable List<RexInputRef> tryIncrementReferences(List<RexNode> rexNodes) {
-    List<RexInputRef> newRefsList = new ArrayList<>();
 
-    for (RexNode rex : rexNodes) {
-      if (rex instanceof RexInputRef){
-        RexInputRef ref = (RexInputRef) rex;
-        newRefsList.add(new RexInputRef( ref.getIndex() + 1, ref.getType()));
+  private RexNode incrementReferences(RexNode rexNode) {
+    if (rexNode instanceof RexInputRef){
+      RexInputRef ref = (RexInputRef) rexNode;
+      return new RexInputRef( ref.getIndex() + 1, ref.getType());
+    } else {
+      return new RexLiteral(null, rexNode.getType(), rexNode.getType().getSqlTypeName());
+    }
+  }
+
+
+  private List<RexLiteral> getLinkers(int count, CalcitePrepare.Context context) {
+    List<RexLiteral> links = new ArrayList<>();
+
+    //TODO: get unlinkable pseudonym here
+    String CRYPTO_VALUE = "xbjsak8123";
+
+    for (int i = 0; i < count; i ++) {
+      RexBuilder rexBuilder = new RexBuilder(context.getTypeFactory());
+      RexLiteral rex = rexBuilder.makeLiteral(CRYPTO_VALUE);
+      links.add(rex);
+    }
+    return links;
+  }
+
+
+  private @Nullable List<RelDataTypeField> linkerColumns(String rootTable, CalcitePrepare.Context context) {
+    CalciteSchema schema = ScrambledbUtil.schema(context, true);
+    if (schema != null) {
+      Table table = schema.schema.getTable(rootTable);
+      if (table != null ) {
+        return table.getRowType(context.getTypeFactory()).getFieldList();
       } else {
+        //TODO: Throw schema error
         return null;
       }
+    } else {
+      return null;
     }
-    return ImmutableList.copyOf(newRefsList);
   }
 
   private @Nullable <T> RelNode contains(RelNode node, Class<T> type) {
     if (node.getClass() == type) {
       return node;
     }
-
     for (int i = 0; i < node.getInputs().size(); i++) {
       return contains(node.getInputs().get(i), type);
     }

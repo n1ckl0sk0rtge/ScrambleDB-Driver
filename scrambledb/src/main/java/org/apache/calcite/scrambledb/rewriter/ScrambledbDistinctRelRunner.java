@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.apache.calcite.tools;
-
-import com.google.common.collect.ImmutableList;
+package org.apache.calcite.scrambledb.rewriter;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.RelRoot;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
-public class SqlRewriter implements SqlRewriterImpl{
+public class ScrambledbDistinctRelRunner {
 
-  protected SqlRewriter() { }
-
-  @Override
-  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
-    return root;
+  public static void runRelQuery(RelRoot root, CalcitePrepare.Context context)
+      throws SQLException {
+    PreparedStatement statement = context.getRelRunner().prepareStatement(root.rel);
+    statement.execute();
   }
+
 }

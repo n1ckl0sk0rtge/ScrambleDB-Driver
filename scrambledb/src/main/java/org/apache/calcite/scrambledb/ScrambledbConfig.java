@@ -23,8 +23,6 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.ColumnStrategy;
-import org.apache.calcite.sql.SqlNumericLiteral;
-import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -33,12 +31,14 @@ import java.util.List;
 
 public class ScrambledbConfig {
 
+  //TODO: define the right SqlType for unlinkable pseudonym
   private final String linkerName = "linkerID";
   private final String defaultValue = "Null";
   private final Integer size = 255;
   private final SqlTypeName type = SqlTypeName.VARCHAR;
   private final RelDataType linkerRelDataType;
   private final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
+  private final String subTableConnector = "_";
 
   ScrambledbConfig() {
     final RelDataTypeFactory typeFactory =
@@ -50,6 +50,10 @@ public class ScrambledbConfig {
         .add(linkerName, this.type, this.size).nullable(true);
 
     this.linkerRelDataType = relDataBuilder.build();
+  }
+
+  public String createSubtableString(String rootTableName, String columName) {
+    return rootTableName + subTableConnector + columName;
   }
 
   public Integer getSize() {

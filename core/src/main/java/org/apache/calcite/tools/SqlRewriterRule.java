@@ -21,6 +21,8 @@ import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlKind;
 
+import java.util.List;
+
 public interface SqlRewriterRule {
 
     RelNode apply(RelNode node, CalcitePrepare.Context context);

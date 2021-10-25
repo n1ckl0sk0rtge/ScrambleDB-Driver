@@ -1012,17 +1012,18 @@ public class CalcitePrepareImpl implements CalcitePrepare {
       // physical storage.
       root = root.withRel(flattenTypes(root.rel, true));
 
+      // SQL Rewriter
+      final SqlRewriterImplFactory rewriterFactory =
+          context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+      SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
+      root = rewriter.rewrite(root, context);
+
       // Trim unused fields.
       root = trimUnusedFields(root);
 
       final List<Materialization> materializations = ImmutableList.of();
       final List<CalciteSchema.LatticeEntry> lattices = ImmutableList.of();
       root = optimize(root, materializations, lattices);
-
-      final SqlRewriterImplFactory rewriterFactory =
-          context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
-      SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
-      root = rewriter.rewrite(root, context);
 
       if (timingTracer != null) {
         timingTracer.traceTime("end optimization");

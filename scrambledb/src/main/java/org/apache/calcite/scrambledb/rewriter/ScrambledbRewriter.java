@@ -18,7 +18,6 @@
 package org.apache.calcite.scrambledb.rewriter;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.scrambledb.rewriter.rules.ScrambledbInsertRule;
 import org.apache.calcite.tools.SqlRewriterImpl;
@@ -43,6 +42,7 @@ public class ScrambledbRewriter implements SqlRewriterImpl {
         root = RelRoot.of(rule.apply(root.rel, context), root.kind);
       }
     }
+
     return root;
   }
 

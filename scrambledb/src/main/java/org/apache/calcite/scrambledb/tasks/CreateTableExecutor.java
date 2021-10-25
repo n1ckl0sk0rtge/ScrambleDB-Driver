@@ -34,14 +34,12 @@ import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import static org.apache.calcite.util.Static.RESOURCE;
 
 public class CreateTableExecutor {
 
   private final SqlCreateTable create;
-  private final String tableName;
+  private final String name;
   public  ImmutableList<TableColumn> columns;
   private final CalcitePrepare.Context context;
   private final JavaTypeFactory typeFactory;
@@ -56,7 +54,7 @@ public class CreateTableExecutor {
     assert pair.left != null;
     assert pair.right != null;
 
-    this.tableName = pair.right;
+    this.name = pair.right;
     this.schema = pair.left;
     load();
   }
@@ -93,6 +91,10 @@ public class CreateTableExecutor {
     this.columns = columnBuilder.build();
   }
 
+  public String getName() {
+    return name;
+  }
+
   public void addLinkerColumn(TableColumn linker) {
     this.columns = ImmutableList.<TableColumn>builder()
         .add(linker)
@@ -100,13 +102,35 @@ public class CreateTableExecutor {
         .build();
   }
 
-  public void execute() throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
-    if (schema.plus().getTable(tableName) != null) {
+  public void executeWith(String name, ImmutableList<TableColumn> columns) throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
+    if (schema.plus().getTable(this.name) != null) {
       // Table exists.
       if (!create.getReplace()) {
         // They did not specify IF NOT EXISTS, so give error.
         throw SqlUtil.newContextException(create.name.getParserPosition(),
-            RESOURCE.tableExists(tableName));
+            RESOURCE.tableExists(this.name));
+      }
+    } else {
+      if (schema.schema instanceof CreateTable) {
+        CreateTable createTableSchema = (CreateTable) schema.schema;
+        createTableSchema.createTable(
+            name,
+            columns);
+        createTableSchema.reloadTablesIntoSchema();
+      } else {
+        throw new ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema(
+            "Create table functionality is not part of schema");
+      }
+    }
+  }
+
+  public void execute() throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
+    if (schema.plus().getTable(name) != null) {
+      // Table exists.
+      if (!create.getReplace()) {
+        // They did not specify IF NOT EXISTS, so give error.
+        throw SqlUtil.newContextException(create.name.getParserPosition(),
+            RESOURCE.tableExists(name));
       }
     } else {
       if (schema.schema instanceof CreateTable) {
