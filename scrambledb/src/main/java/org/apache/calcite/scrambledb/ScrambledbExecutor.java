@@ -19,6 +19,7 @@ package org.apache.calcite.scrambledb;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
@@ -35,6 +36,7 @@ import org.apache.calcite.sql.parser.scrambledb.SqlScrambledbParserImpl;
 import org.apache.calcite.sql.type.BasicSqlType;
 
 import java.io.Reader;
+import java.util.List;
 
 /** Executes ScrambleDB related commands.
  *
@@ -90,7 +92,10 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
     );
 
     for (TableColumn column : exec.columns) {
-      exec.executeWith(exec.getName() + "_" + column.getName(),
+      exec.executeWith(
+          ScrambledbExecutor.config.createSubtableString(
+              exec.getName(),
+              column.getName()),
           ImmutableList.<TableColumn>builder()
           .add(linkerColumn)
           .add(column)
@@ -102,7 +107,21 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
   public static void execute(SqlDropObject drop,
       CalcitePrepare.Context context) {
 
-    DropTableExecutor.execute(drop, context);
+    DropTableExecutor exec = new DropTableExecutor(drop, context);
+
+    List<String> rootTableColumnNames = exec.getRootTableColumnsNames();
+
+    for (String name : rootTableColumnNames) {
+      exec.executeWith(ScrambledbExecutor.config.createSubtableString(
+          exec.getName(),
+          name));
+    }
+
+    /* Delete the empty table.
+     */
+    exec.execute();
+
+
   }
 
 }

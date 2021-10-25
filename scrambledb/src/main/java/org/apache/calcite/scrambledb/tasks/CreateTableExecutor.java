@@ -95,13 +95,6 @@ public class CreateTableExecutor {
     return name;
   }
 
-  public void addLinkerColumn(TableColumn linker) {
-    this.columns = ImmutableList.<TableColumn>builder()
-        .add(linker)
-        .addAll(this.columns)
-        .build();
-  }
-
   public void executeWith(String name, ImmutableList<TableColumn> columns) throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
     if (schema.plus().getTable(this.name) != null) {
       // Table exists.
