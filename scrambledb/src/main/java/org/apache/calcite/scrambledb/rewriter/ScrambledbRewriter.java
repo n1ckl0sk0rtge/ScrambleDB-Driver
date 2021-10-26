@@ -20,6 +20,7 @@ package org.apache.calcite.scrambledb.rewriter;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.scrambledb.rewriter.rules.ScrambledbInsertRule;
+import org.apache.calcite.scrambledb.rewriter.rules.ScrambledbSelectRule;
 import org.apache.calcite.tools.SqlRewriterImpl;
 import org.apache.calcite.tools.SqlRewriterRule;
 
@@ -32,14 +33,17 @@ public class ScrambledbRewriter implements SqlRewriterImpl {
 
   ScrambledbRewriter() {
     rules.add(new ScrambledbInsertRule());
+    rules.add(new ScrambledbSelectRule());
   }
 
   @Override
   public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
 
     for (SqlRewriterRule rule : rules) {
-      if (rule.isApplicable(root.kind)) {
-        root = RelRoot.of(rule.apply(root.rel, context), root.kind);
+      if (rule.isApplicable(root.rel, root.kind)) {
+        root = RelRoot.of(
+            rule.apply(root.rel, context),
+            root.kind);
       }
     }
 

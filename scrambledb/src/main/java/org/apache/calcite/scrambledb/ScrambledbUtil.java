@@ -19,10 +19,15 @@ package org.apache.calcite.scrambledb;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.ContextSqlValidator;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Util;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -70,6 +75,17 @@ public class ScrambledbUtil {
       schema = schema.getSubSchema(p, true);
     }
     return schema;
+  }
+
+
+  public static @Nullable <T> RelNode contains(RelNode node, Class<T> type) {
+    if (node.getClass() == type) {
+      return node;
+    }
+    for (int i = 0; i < node.getInputs().size(); i++) {
+      return contains(node.getInputs().get(i), type);
+    }
+    return null;
   }
 
   /**

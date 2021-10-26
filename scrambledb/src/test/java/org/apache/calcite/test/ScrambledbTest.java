@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.test;
 
+import org.apache.calcite.scrambledb.ScrambledbUtil;
+
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,20 +37,21 @@ public class ScrambledbTest {
     Connection connection = ScrambledbTestUtil.getConnection();
     Statement statement = connection.createStatement();
 
-    boolean b = statement.execute("create table t (i int default 1, m varchar(25))");
+    boolean b = statement.execute("create table customer (name varchar(20), age int default 0)");
     assertThat(b, is(false));
-    int y = statement.executeUpdate("insert into t (i) values (1)");
+    int y = statement.executeUpdate("insert into customer (name) values ('max')");
     assertThat(y, is(1));
-    int x = statement.executeUpdate("insert into t (i, m) values (2, 'hello')");
+    int x = statement.executeUpdate("insert into customer (name, age) values ('lisa', 31)");
     assertThat(x, is(1));
-    x = statement.executeUpdate("insert into t values (3, 'world')");
+    x = statement.executeUpdate("insert into customer values ('lucas', 12)");
     assertThat(x, is(1));
+    //statement.execute("select * from t");
     /*try (ResultSet r = statement.executeQuery("select sum(i) from t")) {
       assertThat(r.next(), is(true));
       assertThat(r.getInt(1), is(4));
       assertThat(r.next(), is(false));
     }*/
-    statement.execute("drop table t");
+    statement.execute("drop table customer");
 
     statement.close();
     connection.close();

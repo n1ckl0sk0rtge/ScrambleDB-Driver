@@ -27,6 +27,6 @@ public interface SqlRewriterRule {
 
     RelNode apply(RelNode node, CalcitePrepare.Context context);
 
-    boolean isApplicable(SqlKind kind);
+    boolean isApplicable(RelNode node, SqlKind kind);
 
 }

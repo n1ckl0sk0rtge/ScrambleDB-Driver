@@ -121,7 +121,6 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
      */
     exec.execute();
 
-
   }
 
 }

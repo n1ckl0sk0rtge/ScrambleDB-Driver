@@ -86,18 +86,21 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     *
     */
 
-    LogicalTableModify logicalTableModify = (LogicalTableModify) contains(node, LogicalTableModify.class);
+    LogicalTableModify logicalTableModify =
+        (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
     assert logicalTableModify != null;
     RelOptTable tableDefinition = logicalTableModify.getTable();
     List<String> qualifiedName = tableDefinition.getQualifiedName();
     assert qualifiedName.get(1) != null;
     String rootTableName = qualifiedName.get(1);
 
-    LogicalValues logicalValues = containsLogicalValue(node);
+    LogicalValues logicalValues =
+        (LogicalValues) ScrambledbUtil.contains(node, LogicalValues.class);
     assert logicalValues != null;
     ImmutableList<ImmutableList<RexLiteral>> tuples = logicalValues.getTuples();
 
-    LogicalProject logicalProject = containsLogicalProject(node);
+    LogicalProject logicalProject =
+        (LogicalProject) ScrambledbUtil.contains(node, LogicalProject.class);
 
     RelNode newNode = node;
 
@@ -188,7 +191,9 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
             tableDefinition.getRelOptSchema(),
             newLogicalValues.getRowType(),
             ImmutableList.of(
+                //adhoc
                 newLogicalValues.getRowType().getFieldNames().get(0),
+                // T_<column>
                 subTableName),
             table,
             tableDefinition.getExpression(Queryable.class));
@@ -223,8 +228,9 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
   }
 
   @Override
-  public boolean isApplicable(SqlKind kind) {
-    return kind == SqlKind.INSERT;
+  public boolean isApplicable(RelNode node, SqlKind kind) {
+    return kind == SqlKind.INSERT &&
+        ScrambledbUtil.contains(node, LogicalTableModify.class) != null;
   }
 
 
@@ -260,24 +266,6 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
       links.add(rex);
     }
     return links;
-  }
-
-  private @Nullable <T> RelNode contains(RelNode node, Class<T> type) {
-    if (node.getClass() == type) {
-      return node;
-    }
-    for (int i = 0; i < node.getInputs().size(); i++) {
-      return contains(node.getInputs().get(i), type);
-    }
-    return null;
-  }
-
-  private @Nullable LogicalValues containsLogicalValue(RelNode node) {
-      return (LogicalValues) contains(node, LogicalValues.class);
-  }
-
-  private @Nullable LogicalProject containsLogicalProject(RelNode node) {
-    return (LogicalProject) contains(node, LogicalProject.class);
   }
 
 }
