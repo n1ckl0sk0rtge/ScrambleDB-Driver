@@ -16,6 +16,7 @@
  */
 package org.apache.calcite.rel.logical;
 
+import org.apache.calcite.adapter.jdbc.JdbcTableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -158,7 +159,7 @@ public final class LogicalJoin extends Join {
         ImmutableList.of());
   }
 
-  /** Creates a LogicalJoin. */
+    /** Creates a LogicalJoin. */
   public static LogicalJoin create(RelNode left, RelNode right, List<RelHint> hints,
       RexNode condition, Set<CorrelationId> variablesSet, JoinRelType joinType) {
     return create(left, right, hints, condition, variablesSet, joinType, false,

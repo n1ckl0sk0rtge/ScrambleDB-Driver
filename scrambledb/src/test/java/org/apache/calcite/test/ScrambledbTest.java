@@ -45,7 +45,9 @@ public class ScrambledbTest {
     assertThat(x, is(1));
     x = statement.executeUpdate("insert into customer values ('lucas', 12)");
     assertThat(x, is(1));
-    //statement.execute("select * from t");
+    try (ResultSet r = statement.executeQuery("select * from customer")) {
+      ScrambledbTestUtil.printResult(r);
+    }
     /*try (ResultSet r = statement.executeQuery("select sum(i) from t")) {
       assertThat(r.next(), is(true));
       assertThat(r.getInt(1), is(4));

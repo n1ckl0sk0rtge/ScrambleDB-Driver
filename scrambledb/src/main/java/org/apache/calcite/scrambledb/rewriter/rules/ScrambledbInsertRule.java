@@ -163,8 +163,6 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
               .add(valueReference)
               .build();
 
-          //TODO: find out and define hints
-
           newLogicalProject = LogicalProject.create(
               newLogicalValues,
               ImmutableList.of(),

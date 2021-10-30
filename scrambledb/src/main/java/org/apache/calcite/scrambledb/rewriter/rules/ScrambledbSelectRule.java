@@ -19,26 +19,27 @@ package org.apache.calcite.scrambledb.rewriter.rules;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.adapter.jdbc.JdbcTableScan;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.linq4j.Queryable;
-import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
-import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
@@ -57,88 +58,155 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
      *   LogicalProject(I=[$0])
      *     JdbcTableScan(table=[[adhoc, T]])
      *
-     *
-     *
-    JdbcTableScan scan = (JdbcTableScan) ScrambledbUtil.contains(node, JdbcTableScan.class);
+     */
+    JdbcTableScan scan =
+        (JdbcTableScan) ScrambledbUtil.contains(node, JdbcTableScan.class);
     assert scan != null;
-    System.out.println(node.explain());
+    String tableName = scan.jdbcTable.jdbcTableName;
+    List<RelDataTypeField> columnDataTypeFields = scan.getTable().getRowType().getFieldList();
 
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
     // if not, an error would raise lines before.
     assert schema != null;
 
+    List<JdbcTableScan> subTables = new ArrayList<JdbcTableScan>();
 
-    JdbcTable table = (JdbcTable) schema.schema.getTable("T_NUMBERS");
-    // this table should exist, because it was self created by create table
-    // and there are no other operations allowed that delete sub-tables.
-    assert table != null;
+    for (RelDataTypeField field : columnDataTypeFields){
+      String columnName = field.getName();
+      String subTableName =
+          ScrambledbExecutor.config.createSubtableString(tableName, columnName);
+      JdbcTable subTable = (JdbcTable) schema.schema.getTable(subTableName);
+      // this table should exist, because it was self created by create table
+      // and there are no other operations allowed that delete sub-tables.
+      assert subTable != null;
+      // collect subtables
+      subTables
+          .add(getTableScan(
+              context,
+              schema.plus(),
+              scan,
+              subTable,
+              subTableName));
+    }
+
+    final FrameworkConfig config = Frameworks.newConfigBuilder()
+        .defaultSchema(schema.plus())
+        .build();
+    RelBuilder builder = RelBuilder.create(config);
+    builder
+        .pushAll(subTables)
+        .join(JoinRelType.INNER,
+            ScrambledbExecutor.config.getLinkerName());
+
+    LogicalJoin join = (LogicalJoin) builder.build();
+
+    RexNode linkerReference = new RexInputRef(1,
+        join.getLeft().getRowType().getFieldList().get(1).getType());
+
+    RexNode valueReference = new RexInputRef(3,
+        join.getRight().getRowType().getFieldList().get(1).getType());
+
+    List<RexNode> newProjects = ImmutableList.<RexNode>builder()
+        .add(linkerReference)
+        .add(valueReference)
+        .build();
 
     RelDataTypeFactory.Builder relDataTypeBuilder =
         new RelDataTypeFactory.Builder(context.getTypeFactory());
-    relDataTypeBuilder
-        .add(table.getRowType(context.getTypeFactory()).getFieldList().get(1));
+    relDataTypeBuilder.add(join.getLeft().getRowType().getFieldList().get(1))
+        .add(join.getRight().getRowType().getFieldList().get(1));
 
-    RelOptTable newTableDefinition = RelOptTableImpl.create(
-        scan.getTable().getRelOptSchema(),
-        relDataTypeBuilder.build(),
-        ImmutableList.of(
-            //adhoc
-            scan.getTable().getQualifiedName().get(0),
-            // T_<column>
-            "T_NUMBERS"),
-        table,
-        scan.getTable().getExpression(Queryable.class)
-    );
-
-    JdbcConvention con = JdbcConvention.of(
-        scan.jdbcTable.jdbcSchema.dialect,
-        scan.jdbcTable.getExpression(
-            context.getRootSchema().plus(),
-            "T_NUMBERS",
-            Queryable.class
-        ),
-        "T_NUMBERS"
-    );
-
-    JdbcTableScan newScan = new JdbcTableScan(
-        scan.getCluster(),
-        scan.getHints(),
-        newTableDefinition,
-        table,
-        con
-    );
-
-    LogicalProject logicalProject =
-        (LogicalProject) ScrambledbUtil.contains(node, LogicalProject.class);
-    assert logicalProject != null;
-
-    RexNode value = new RexInputRef(0,
-        logicalProject.getRowType().getFieldList().get(0).getType());
-
-    List<RexNode> newProjects = ImmutableList.<RexNode>builder()
-        .add(value)
-        .build();
-
-    LogicalProject newLogicalProject = LogicalProject.create(
-        newScan,
-        ImmutableList.of(),
+    LogicalProject p = LogicalProject.create(join,
+        join.getHints(),
         newProjects,
-        ImmutableList.of(logicalProject.getRowType().getFieldNames().get(0))
-    );
+        relDataTypeBuilder.build());
 
-    System.out.println(newLogicalProject.explain());
+    System.out.println(p.explain());
 
-    //return newLogicalProject;
-
-     */
-    return node;
+    return p;
   }
 
   @Override
   public boolean isApplicable(RelNode node, SqlKind kind) {
     return kind == SqlKind.SELECT &&
         ScrambledbUtil.contains(node, JdbcTableScan.class) != null;
+  }
+
+  private JdbcTableScan getTableScan(
+      CalcitePrepare.Context context,
+      SchemaPlus plus,
+      JdbcTableScan scan,
+      JdbcTable subTable,
+      String tableName) {
+    // adhoc value
+    String adhoc = scan.getTable().getQualifiedName().get(0);
+    // Build RelDataType from field
+    RelDataTypeFactory.Builder relDataTypeBuilder =
+        new RelDataTypeFactory.Builder(context.getTypeFactory());
+    relDataTypeBuilder
+        .addAll(subTable.getRowType(context.getTypeFactory())
+            .getFieldList());
+    // define the new table from dataType
+    RelOptTable newTableDefinition = RelOptTableImpl.create(
+        scan.getTable().getRelOptSchema(),
+        relDataTypeBuilder.build(),
+        ImmutableList.of(
+            //adhoc
+            adhoc,
+            // T_<column>
+            tableName),
+        subTable,
+        subTable.getExpression(
+            plus,
+            tableName,
+            AbstractQueryableTable.class)
+    );
+    /*
+     * Define the new JdbcTableScan
+     */
+    // Define the JdbcConvention
+    JdbcConvention newJdbcConvention = JdbcConvention.of(
+        scan.jdbcTable.jdbcSchema.dialect,
+        subTable.getExpression(
+            plus,
+            tableName,
+            AbstractQueryableTable.class),
+        adhoc + tableName
+    );
+    // Define new JdbcTableScan from JdbcConvention
+    return new JdbcTableScan(
+        scan.getCluster(),
+        scan.getHints(),
+        newTableDefinition,
+        subTable,
+        newJdbcConvention
+    );
+
+    /*List<RexNode> refs = new ArrayList<RexNode>();
+
+    int counter = 0;
+    for (RelDataTypeField field : newScan.getRowType().getFieldList()) {
+      refs.add(new RexInputRef(counter, field.getType()));
+      counter++;
+    }
+
+    List<RexNode> newProjects = ImmutableList.<RexNode>builder()
+        .addAll(refs)
+        .build();
+
+    // Build RelDataType from field
+    relDataTypeBuilder =
+        new RelDataTypeFactory.Builder(context.getTypeFactory());
+    relDataTypeBuilder
+        .addAll(newScan.getRowType().getFieldList());
+
+    return LogicalProject.create(
+        newScan,
+        ImmutableList.of(),
+        newProjects,
+        relDataTypeBuilder.build()
+    );*/
   }
 
 }

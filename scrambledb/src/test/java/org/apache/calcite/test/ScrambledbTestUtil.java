@@ -51,7 +51,7 @@ public class ScrambledbTestUtil {
         buf.append(i > 1 ? "; " : "")
             .append(resultSet.getMetaData().getColumnLabel(i))
             .append("=")
-            .append(resultSet.getObject(i));
+            .append(resultSet.getObject(i).toString());
       }
       System.out.println(buf.toString());
       buf.setLength(0);
