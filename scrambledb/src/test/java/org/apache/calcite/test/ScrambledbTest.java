@@ -77,8 +77,18 @@ public class ScrambledbTest {
       assertThat(r.next(), is(false));
     }
 
+    statement.execute("create table guest (name varchar(20), hotel varchar(20))");
+
+    statement.executeUpdate("insert into guest values ('lisa', 'b&b')");
+
+    try (ResultSet r = statement.executeQuery("select guest.name, customer.age from guest join customer on guest.name=customer.name")) {
+      String result = ScrambledbTestUtil.resultToString(r);
+      assertThat(result, is("NAME=lisa; AGE=31\n"));
+    }
+
     statement.execute("drop table customer");
     statement.execute("drop table hotel");
+    statement.execute("drop table guest");
 
     statement.close();
     connection.close();

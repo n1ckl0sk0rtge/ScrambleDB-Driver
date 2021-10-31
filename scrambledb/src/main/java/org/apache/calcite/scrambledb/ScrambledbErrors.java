@@ -20,6 +20,8 @@ package org.apache.calcite.scrambledb;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.RelNode;
 
+import java.util.Stack;
+
 public class ScrambledbErrors {
 
   public static class RewriteInsertRuleError extends Exception {
@@ -31,6 +33,13 @@ public class ScrambledbErrors {
   public static class CreateTableFunctionalityIsNotPartOfSchema extends Exception {
     public CreateTableFunctionalityIsNotPartOfSchema(CalciteSchema schema) {
       super("Create table functionality is not part of schema: " + schema.schema);
+    }
+  }
+
+  public static class SelectReplacementError extends Exception {
+    public SelectReplacementError(RelNode currentNode, Stack<RelNode> replaceNodes) {
+      super("Error while replacing select statements (JdbcTableScan) with custom ScrambledbScans" +
+          " by node" + currentNode.explain() + ". ReplacementNodes: " + replaceNodes.toString());
     }
   }
 

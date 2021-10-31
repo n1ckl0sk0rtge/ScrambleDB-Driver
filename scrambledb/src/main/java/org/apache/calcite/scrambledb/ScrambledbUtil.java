@@ -29,6 +29,7 @@ import org.apache.calcite.util.Util;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** A class for utility function related to Scrmbledb.
@@ -73,9 +74,23 @@ public class ScrambledbUtil {
       return node;
     }
     for (int i = 0; i < node.getInputs().size(); i++) {
-      return contains(node.getInputs().get(i), type);
+      return contains(node.getInput(i), type);
     }
     return null;
+  }
+
+  public static <T> List<RelNode> containsMultiple(RelNode node, Class<T> type) {
+    return containsMultiple(new ArrayList<>(), node, type);
+  }
+
+  private static <T> List<RelNode> containsMultiple(List<RelNode> nodes, RelNode node, Class<T> type) {
+    if (node.getClass() == type) {
+      nodes.add(node);
+    }
+    for (int i = 0; i < node.getInputs().size(); i++) {
+      containsMultiple(nodes, node.getInput(i), type);
+    }
+    return nodes;
   }
 
   /**
