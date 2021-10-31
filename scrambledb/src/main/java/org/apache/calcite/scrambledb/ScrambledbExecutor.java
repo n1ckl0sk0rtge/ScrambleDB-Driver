@@ -67,8 +67,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
   /** Executes a {@code CREATE TABLE} command. */
   public void execute(SqlCreateTable create,
-      CalcitePrepare.Context context) throws
-      Exception {
+      CalcitePrepare.Context context) {
 
     CreateTableExecutor exec = new CreateTableExecutor(create, context);
 
@@ -77,29 +76,35 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
      * That ensures, that the validator can validate (semantic)
      * sql queries against this table.
      */
-    exec.execute();
 
-    TableColumn linkerColumn = new TableColumn(
-        config.getLinkerName(),
-        SqlNumericLiteral.createCharString(
-            config.getDefaultValue(),
-            SqlParserPos.ZERO),
-        new BasicSqlType(
-            RelDataTypeSystemImpl.DEFAULT,
-            config.getType(),
-            config.getSize()),
-        config.getColumnStrategy()
-    );
+    try {
+      exec.execute();
 
-    for (TableColumn column : exec.columns) {
-      exec.executeWith(
-          ScrambledbExecutor.config.createSubtableString(
-              exec.getName(),
-              column.getName()),
-          ImmutableList.<TableColumn>builder()
-          .add(linkerColumn)
-          .add(column)
-          .build());
+      TableColumn linkerColumn = new TableColumn(
+          config.getLinkerName(),
+          SqlNumericLiteral.createCharString(
+              config.getDefaultValue(),
+              SqlParserPos.ZERO),
+          new BasicSqlType(
+              RelDataTypeSystemImpl.DEFAULT,
+              config.getType(),
+              config.getSize()),
+          config.getColumnStrategy()
+      );
+
+      for (TableColumn column : exec.columns) {
+        exec.executeWith(
+            ScrambledbExecutor.config.createSubtableString(
+                exec.getName(),
+                column.getName()),
+            ImmutableList.<TableColumn>builder()
+                .add(linkerColumn)
+                .add(column)
+                .build());
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 

@@ -28,6 +28,7 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelNodes;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -46,8 +47,9 @@ import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.SqlRewriterRule;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.*;
 
 public class ScrambledbSelectRule implements SqlRewriterRule  {
 
@@ -70,8 +72,12 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     // if not, an error would raise lines before.
     assert schema != null;
 
-    List<JdbcTableScan> subTables = new ArrayList<JdbcTableScan>();
+    Stack<JdbcTableScan> subTables = new Stack<>();
+    // relevant values = actual values in the database, not the linker
+    List<RexNode> relevantValuesReference = new ArrayList<>();
+    List<RelDataTypeField> relevantValuesDataField = new ArrayList<>();
 
+    int counter = 1;
     for (RelDataTypeField field : columnDataTypeFields){
       String columnName = field.getName();
       String subTableName =
@@ -82,55 +88,86 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       assert subTable != null;
       // collect subtables
       subTables
-          .add(getTableScan(
-              context,
-              schema.plus(),
-              scan,
-              subTable,
-              subTableName));
+        .add(getTableScan(
+            context,
+            schema.plus(),
+            scan,
+            subTable,
+            subTableName));
+      // create references to the relevant values for the projection
+      RelDataTypeField relevantField = subTable.getRowType(context.getTypeFactory())
+          // 1 = because 0 is always the linker and 1 always the actual value
+          .getFieldList().get(1);
+      relevantValuesReference.add(new RexInputRef(counter, relevantField.getType()));
+      // add values type
+      relevantValuesDataField.add(relevantField);
+      // increment counter with 2
+      counter += 2;
     }
 
+    // create the join over the scrambled tables
     final FrameworkConfig config = Frameworks.newConfigBuilder()
         .defaultSchema(schema.plus())
         .build();
     RelBuilder builder = RelBuilder.create(config);
-    builder
-        .pushAll(subTables)
-        .join(JoinRelType.INNER,
-            ScrambledbExecutor.config.getLinkerName());
 
-    LogicalJoin join = (LogicalJoin) builder.build();
-
-    RexNode linkerReference = new RexInputRef(1,
-        join.getLeft().getRowType().getFieldList().get(1).getType());
-
-    RexNode valueReference = new RexInputRef(3,
-        join.getRight().getRowType().getFieldList().get(1).getType());
+    RelNode rightJoinElement = subTables.pop();
+    LogicalJoin join = (LogicalJoin) join(subTables, rightJoinElement, builder);
 
     List<RexNode> newProjects = ImmutableList.<RexNode>builder()
-        .add(linkerReference)
-        .add(valueReference)
+        .addAll(relevantValuesReference)
         .build();
 
     RelDataTypeFactory.Builder relDataTypeBuilder =
         new RelDataTypeFactory.Builder(context.getTypeFactory());
-    relDataTypeBuilder.add(join.getLeft().getRowType().getFieldList().get(1))
-        .add(join.getRight().getRowType().getFieldList().get(1));
+    relDataTypeBuilder.addAll(relevantValuesDataField);
 
-    LogicalProject p = LogicalProject.create(join,
+    LogicalProject project = LogicalProject.create(join,
         join.getHints(),
         newProjects,
         relDataTypeBuilder.build());
 
-    System.out.println(p.explain());
-
-    return p;
+    // clear builder before
+    // replace the default select RelNodes with the rewritten nodes for the whole statement
+    builder.clear();
+    return replaceWithCustomScan(node, project, builder);
   }
 
   @Override
   public boolean isApplicable(RelNode node, SqlKind kind) {
     return kind == SqlKind.SELECT &&
         ScrambledbUtil.contains(node, JdbcTableScan.class) != null;
+  }
+
+  private RelNode replaceWithCustomScan(RelNode currentNode, RelNode replaceNode, RelBuilder builder) {
+    if (currentNode.getClass() == JdbcTableScan.class) {
+      return replaceNode;
+    } else {
+      for (int i = 0; i < currentNode.getInputs().size(); i++) {
+        builder.push(replaceWithCustomScan(currentNode.getInput(i), replaceNode, builder));
+      }
+      currentNode.replaceInput(0, builder.build());
+      builder.clear();
+      return currentNode;
+    }
+  }
+
+  private RelNode join(
+      Stack<JdbcTableScan> left,
+      RelNode right,
+      RelBuilder builder) {
+    if (left.empty()) {
+      return right;
+    } else {
+      builder
+          .push(left.pop())
+          .push(right)
+          .join(JoinRelType.FULL,
+              ScrambledbExecutor.config.getLinkerName());
+      RelNode newRight = builder.build();
+      builder.clear();
+      return join(left, newRight, builder);
+    }
   }
 
   private JdbcTableScan getTableScan(
@@ -182,31 +219,6 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
         subTable,
         newJdbcConvention
     );
-
-    /*List<RexNode> refs = new ArrayList<RexNode>();
-
-    int counter = 0;
-    for (RelDataTypeField field : newScan.getRowType().getFieldList()) {
-      refs.add(new RexInputRef(counter, field.getType()));
-      counter++;
-    }
-
-    List<RexNode> newProjects = ImmutableList.<RexNode>builder()
-        .addAll(refs)
-        .build();
-
-    // Build RelDataType from field
-    relDataTypeBuilder =
-        new RelDataTypeFactory.Builder(context.getTypeFactory());
-    relDataTypeBuilder
-        .addAll(newScan.getRowType().getFieldList());
-
-    return LogicalProject.create(
-        newScan,
-        ImmutableList.of(),
-        newProjects,
-        relDataTypeBuilder.build()
-    );*/
   }
 
 }

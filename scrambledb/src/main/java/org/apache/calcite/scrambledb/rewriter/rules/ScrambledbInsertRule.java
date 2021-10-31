@@ -35,6 +35,7 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.*;
+import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.sql.SqlKind;
@@ -43,6 +44,7 @@ import org.apache.calcite.tools.SqlRewriterRule;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -50,7 +52,8 @@ import java.util.Random;
 public class ScrambledbInsertRule implements SqlRewriterRule {
 
   @Override
-  public RelNode apply(RelNode node, CalcitePrepare.Context context) {
+  public RelNode apply(RelNode node, CalcitePrepare.Context context)
+      throws ScrambledbErrors.RewriteInsertRuleError, SQLException {
     /*
     * Structure of an insert-relational expression:
     *
@@ -137,11 +140,16 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
           // define Reference Node
           RexNode linkerReference = new RexInputRef(0, ScrambledbExecutor.config.getLinkerRelDataType());
+          // increment value reference by 1
+          RexNode valueReference = incrementReferences(projects.get(j));
+          if (valueReference == null) {
+            throw new ScrambledbErrors.RewriteInsertRuleError(node);
+          }
 
           List<RexNode> newProjects = ImmutableList.<RexNode>builder()
               .add(linkerReference)
               // get the j project element
-              .add(incrementReferences(projects.get(j)))
+              .add(valueReference)
               .build();
 
           newLogicalProject = LogicalProject.create(
@@ -210,14 +218,10 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         // Run all underlying sql queries here and only return the last
         // query to run on the "origin" way
         if (!(i == tuples.size() -1 && j == tuples.get(i).size() -1)) {
-          try {
             PreparedStatement statement =
                 context.getRelRunner().prepareStatement(newNode);
             statement.execute();
-          } catch (Exception e) {
-            //TODO: Throw error
-            System.out.println("Error while creating batch");
-          }
+            statement.close();
         }
 
       }
@@ -231,16 +235,13 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         ScrambledbUtil.contains(node, LogicalTableModify.class) != null;
   }
 
-
-  private RexNode incrementReferences(RexNode rexNode) {
+  private @Nullable RexNode incrementReferences(RexNode rexNode) {
     if (rexNode instanceof RexInputRef){
       RexInputRef ref = (RexInputRef) rexNode;
       return new RexInputRef( ref.getIndex() + 1, ref.getType());
-    } else {
-      return new RexLiteral(null, rexNode.getType(), rexNode.getType().getSqlTypeName());
     }
+    return null;
   }
-
 
   private List<RexLiteral> getLinkers(int count, CalcitePrepare.Context context) {
     List<RexLiteral> links = new ArrayList<>();

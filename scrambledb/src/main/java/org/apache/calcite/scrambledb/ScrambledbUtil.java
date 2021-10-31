@@ -35,16 +35,6 @@ import java.util.List;
  */
 public class ScrambledbUtil {
 
-  /** Custom error message for missing schema implementation.
-   */
-  public static class CreateTableFunctionalityIsNotPartOfSchema extends Exception {
-
-    public CreateTableFunctionalityIsNotPartOfSchema(String errorMessage) {
-      super(errorMessage);
-    }
-
-  }
-
   /** Returns the schema in which to create an object. */
   public static Pair<CalciteSchema, String> schema(CalcitePrepare.Context context,
       boolean mutable, SqlIdentifier id) {

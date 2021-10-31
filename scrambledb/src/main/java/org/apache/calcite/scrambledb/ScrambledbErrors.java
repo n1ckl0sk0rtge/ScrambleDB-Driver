@@ -15,18 +15,23 @@
  * limitations under the License.
  */
 
-package org.apache.calcite.tools;
+package org.apache.calcite.scrambledb;
 
-import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlKind;
 
-import java.util.List;
+public class ScrambledbErrors {
 
-public interface SqlRewriterRule {
+  public static class RewriteInsertRuleError extends Exception {
+    public RewriteInsertRuleError(RelNode node) {
+      super("Error while rewriting insert statement: \n\n" + node.explain());
+    }
+  }
 
-    RelNode apply(RelNode node, CalcitePrepare.Context context) throws Exception;
-
-    boolean isApplicable(RelNode node, SqlKind kind);
+  public static class CreateTableFunctionalityIsNotPartOfSchema extends Exception {
+    public CreateTableFunctionalityIsNotPartOfSchema(CalciteSchema schema) {
+      super("Create table functionality is not part of schema: " + schema.schema);
+    }
+  }
 
 }

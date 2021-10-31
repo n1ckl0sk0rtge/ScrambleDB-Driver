@@ -43,19 +43,23 @@ public class ScrambledbTestUtil {
     return DriverManager.getConnection(config);
   }
 
-  public static void printResult(ResultSet resultSet) throws SQLException {
+  public static String resultToString(ResultSet resultSet) throws SQLException {
     final StringBuilder buf = new StringBuilder();
     while (resultSet.next()) {
       int n = resultSet.getMetaData().getColumnCount();
       for (int i = 1; i <= n; i++) {
         buf.append(i > 1 ? "; " : "")
             .append(resultSet.getMetaData().getColumnLabel(i))
-            .append("=")
-            .append(resultSet.getObject(i).toString());
+            .append("=");
+        if (resultSet.getObject(i) != null) {
+          buf.append(resultSet.getObject(i).toString());
+        } else {
+          buf.append("null");
+        }
       }
-      System.out.println(buf.toString());
-      buf.setLength(0);
+      buf.append("\n");
     }
+    return buf.toString();
   }
 
 }

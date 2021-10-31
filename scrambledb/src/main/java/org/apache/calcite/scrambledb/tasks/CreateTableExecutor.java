@@ -26,6 +26,7 @@ import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.schema.CreateTable;
+import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.schema.TableColumn;
@@ -95,7 +96,7 @@ public class CreateTableExecutor {
     return name;
   }
 
-  public void executeWith(String name, ImmutableList<TableColumn> columns) throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
+  public void executeWith(String name, ImmutableList<TableColumn> columns) throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
     if (schema.plus().getTable(this.name) != null) {
       // Table exists.
       if (!create.getReplace()) {
@@ -111,13 +112,12 @@ public class CreateTableExecutor {
             columns);
         createTableSchema.reloadTablesIntoSchema();
       } else {
-        throw new ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema(
-            "Create table functionality is not part of schema");
+        throw new ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema(schema);
       }
     }
   }
 
-  public void execute() throws ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema {
+  public void execute() throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
     if (schema.plus().getTable(name) != null) {
       // Table exists.
       if (!create.getReplace()) {
@@ -133,8 +133,7 @@ public class CreateTableExecutor {
             this.columns);
         createTableSchema.reloadTablesIntoSchema();
       } else {
-        throw new ScrambledbUtil.CreateTableFunctionalityIsNotPartOfSchema(
-            "Create table functionality is not part of schema");
+        throw new ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema(schema);
       }
     }
   }

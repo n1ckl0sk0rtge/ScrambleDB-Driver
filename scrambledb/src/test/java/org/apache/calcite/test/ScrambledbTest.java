@@ -16,8 +16,6 @@
  */
 package org.apache.calcite.test;
 
-import org.apache.calcite.scrambledb.ScrambledbUtil;
-
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,21 +37,48 @@ public class ScrambledbTest {
 
     boolean b = statement.execute("create table customer (name varchar(20), age int default 0)");
     assertThat(b, is(false));
+
     int y = statement.executeUpdate("insert into customer (name) values ('max')");
     assertThat(y, is(1));
+
     int x = statement.executeUpdate("insert into customer (name, age) values ('lisa', 31)");
     assertThat(x, is(1));
+
     x = statement.executeUpdate("insert into customer values ('lucas', 12)");
     assertThat(x, is(1));
+
     try (ResultSet r = statement.executeQuery("select * from customer")) {
-      ScrambledbTestUtil.printResult(r);
+      String result = ScrambledbTestUtil.resultToString(r);
+      assertThat(result, is(
+          "NAME=max; AGE=null\n" +
+                "NAME=lisa; AGE=31\n" +
+                "NAME=lucas; AGE=12\n"));
     }
-    /*try (ResultSet r = statement.executeQuery("select sum(i) from t")) {
+
+    b = statement.execute("create table hotel (name varchar(20), street varchar(25), zip int)");
+    assertThat(b, is(false));
+
+    y = statement.executeUpdate("insert into hotel values ('b&b', 'hotel street', '12345')");
+    assertThat(y, is(1));
+
+    try (ResultSet r = statement.executeQuery("select * from hotel")) {
+      String result = ScrambledbTestUtil.resultToString(r);
+      assertThat(result, is("NAME=b&b; STREET=hotel street; ZIP=12345\n"));
+    }
+
+    try (ResultSet r = statement.executeQuery("select name from hotel")) {
+      String result = ScrambledbTestUtil.resultToString(r);
+      assertThat(result, is("NAME=b&b\n"));
+    }
+
+    try (ResultSet r = statement.executeQuery("select count(name) from customer")) {
       assertThat(r.next(), is(true));
-      assertThat(r.getInt(1), is(4));
+      assertThat(r.getInt(1), is(3));
       assertThat(r.next(), is(false));
-    }*/
+    }
+
     statement.execute("drop table customer");
+    statement.execute("drop table hotel");
 
     statement.close();
     connection.close();

@@ -41,9 +41,13 @@ public class ScrambledbRewriter implements SqlRewriterImpl {
 
     for (SqlRewriterRule rule : rules) {
       if (rule.isApplicable(root.rel, root.kind)) {
-        root = RelRoot.of(
-            rule.apply(root.rel, context),
-            root.kind);
+        try {
+          root = RelRoot.of(
+              rule.apply(root.rel, context),
+              root.kind);
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
     }
 
