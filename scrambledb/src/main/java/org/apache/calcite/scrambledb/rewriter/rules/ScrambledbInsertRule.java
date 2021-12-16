@@ -41,6 +41,7 @@ import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.SqlRewriterRule;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.sql.PreparedStatement;
@@ -230,7 +231,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
   }
 
   @Override
-  public boolean isApplicable(RelNode node, SqlKind kind) {
+  public boolean isApplicable(@NonNull RelNode node, @NonNull SqlKind kind) {
     return kind == SqlKind.INSERT &&
         ScrambledbUtil.contains(node, LogicalTableModify.class) != null;
   }
