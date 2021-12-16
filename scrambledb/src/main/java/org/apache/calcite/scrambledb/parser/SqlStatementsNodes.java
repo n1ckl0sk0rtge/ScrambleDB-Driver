@@ -17,7 +17,6 @@
 package org.apache.calcite.scrambledb.parser;
 
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.ddl.SqlDropTable;
 import org.apache.calcite.sql.parser.SqlParserPos;

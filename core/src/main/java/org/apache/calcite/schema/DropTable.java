@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.schema;
 
-import org.apache.calcite.rel.type.RelProtoDataType;
-
+/**
+ * Interface for schemas to implement for dropping table.
+ */
 public interface DropTable {
 
   void dropTable(String name);

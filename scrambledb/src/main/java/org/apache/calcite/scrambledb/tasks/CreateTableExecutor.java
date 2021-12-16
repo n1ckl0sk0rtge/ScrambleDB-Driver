@@ -14,29 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.tasks;
-
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.rel.type.*;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.schema.CreateTable;
+import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
-import org.apache.calcite.schema.TableColumn;
-import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.apache.calcite.util.Static.RESOURCE;
 
+/**
+ * Class to create table.
+ */
 public class CreateTableExecutor {
 
   private final SqlCreateTable create;
@@ -80,7 +84,8 @@ public class CreateTableExecutor {
         if (columnDeclaration.strategy != ColumnStrategy.VIRTUAL) {
           storedBuilder.add(columnDeclaration.name.getSimple(), type);
         }
-        columnBuilder.add(TableColumn.of(
+        columnBuilder.add(
+            TableColumn.of(
             columnDeclaration.name.toString(),
             columnDeclaration.expression,
             type,
@@ -96,7 +101,8 @@ public class CreateTableExecutor {
     return name;
   }
 
-  public void executeWith(String name, ImmutableList<TableColumn> columns) throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
+  public void executeWith(String name, ImmutableList<TableColumn> columns)
+      throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
     if (schema.plus().getTable(this.name) != null) {
       // Table exists.
       if (!create.getReplace()) {

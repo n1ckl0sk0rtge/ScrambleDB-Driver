@@ -21,7 +21,6 @@ import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.model.JsonSchema;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
-
 import org.apache.calcite.tools.SqlRewriterFactory;
 
 import org.checkerframework.checker.nullness.qual.Nullable;

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rewriter;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
@@ -27,6 +26,9 @@ import org.apache.calcite.tools.SqlRewriterRule;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Rewriter implementation for ScrambleDB.
+ */
 public class ScrambledbRewriter implements SqlRewriterImpl {
 
   private final List<SqlRewriterRule> rules = new ArrayList<>();
@@ -36,8 +38,7 @@ public class ScrambledbRewriter implements SqlRewriterImpl {
     rules.add(new ScrambledbSelectRule());
   }
 
-  @Override
-  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
+  @Override public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
 
     for (SqlRewriterRule rule : rules) {
       if (rule.isApplicable(root.rel, root.kind)) {

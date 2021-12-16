@@ -14,21 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.tools;
-
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.RelRoot;
 
-
+/**
+ * Default SQL rewriter.
+ */
 public class SqlRewriter implements SqlRewriterImpl{
 
   protected SqlRewriter() { }
 
-  @Override
-  public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
+  @Override public RelRoot rewrite(RelRoot root, CalcitePrepare.Context context) {
     return root;
   }
 }

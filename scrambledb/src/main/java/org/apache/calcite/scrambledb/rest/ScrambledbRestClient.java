@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rest;
 
 import org.apache.calcite.scrambledb.rest.model.ConversionRequest;
@@ -23,17 +22,19 @@ import org.apache.calcite.scrambledb.rest.model.GenerationRequest;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
 
+import java.util.List;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * Wrapper class for relevant rest functionality for scrambleDB.
+ */
 public class ScrambledbRestClient {
 
   private final RestServicesInterface proxy;
 
-  public ScrambledbRestClient(){
+  public ScrambledbRestClient() {
     Client client = ResteasyClientBuilderImpl.newClient();
     WebTarget target = client.target("http://192.168.64.3:8080");
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;

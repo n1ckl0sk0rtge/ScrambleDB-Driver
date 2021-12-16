@@ -14,11 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb;
 
 import org.apache.calcite.rel.type.RelDataType;
-
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
@@ -27,11 +25,11 @@ import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
-
-
+/**
+ * Config for scrambleDB.
+ */
 public class ScrambledbConfig {
 
-  //TODO: define the right SqlType for unlinkable pseudonym
   private final String linkerName = "linkerID";
   private final String defaultValue = "Null";
   private final Integer size = 255;

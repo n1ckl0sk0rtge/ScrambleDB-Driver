@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rest;
 
 import org.apache.calcite.scrambledb.rest.model.ConversionRequest;
@@ -27,6 +26,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+/**
+ * Service Interface for all available Rest functions/calls.
+ */
 @Path("/api")
 public interface RestServicesInterface {
 

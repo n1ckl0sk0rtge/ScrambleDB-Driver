@@ -32,9 +32,9 @@ public class ScrambledbTestUtil {
           + "parserFactory=org.apache.calcite.scrambledb.ScrambledbExecutor#PARSER_FACTORY;"
           + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
           + "schema.jdbcDriver=com.mysql.cj.jdbc.Driver;"
-          + "schema.jdbcUrl=jdbc:mysql://localhost/test;"
-          + "schema.jdbcUser=root;"
-          + "schema.jdbcPassword=test;";
+          + "schema.jdbcUrl=jdbc:mysql://192.168.64.3/datalake;"
+          + "schema.jdbcUser=datalake;"
+          + "schema.jdbcPassword=datalake;";
 
   private ScrambledbTestUtil() {    }
 

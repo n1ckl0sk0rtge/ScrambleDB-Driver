@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb;
 
 import org.apache.calcite.jdbc.CalciteSchema;
@@ -22,24 +21,41 @@ import org.apache.calcite.rel.RelNode;
 
 import java.util.Stack;
 
+/**
+ * Specific error definitions for ScrambleDB.
+ */
 public class ScrambledbErrors {
-
+  /**
+   * Error definition for insert query.
+   */
   public static class RewriteInsertRuleError extends Exception {
     public RewriteInsertRuleError(RelNode node) {
-      super("Error while rewriting insert statement: \n\n" + node.explain());
+      super("Error while rewriting insert statement: n"
+          + node.explain());
     }
   }
 
+  /**
+   * Error definition for create table.
+   */
   public static class CreateTableFunctionalityIsNotPartOfSchema extends Exception {
     public CreateTableFunctionalityIsNotPartOfSchema(CalciteSchema schema) {
-      super("Create table functionality is not part of schema: " + schema.schema);
+      super("Create table functionality is not part of schema: "
+          + schema.schema);
     }
   }
 
+  /**
+   * Error definition for select table query.
+   */
   public static class SelectReplacementError extends Exception {
     public SelectReplacementError(RelNode currentNode, Stack<RelNode> replaceNodes) {
-      super("Error while replacing select statements (JdbcTableScan) with custom ScrambledbScans" +
-          " by node" + currentNode.explain() + ". ReplacementNodes: " + replaceNodes.toString());
+      super(
+          "Error while replacing select statements (JdbcTableScan) with custom ScrambledbScans"
+              + " by node"
+              + currentNode.explain()
+              + ". ReplacementNodes: "
+              + replaceNodes.toString());
     }
   }
 

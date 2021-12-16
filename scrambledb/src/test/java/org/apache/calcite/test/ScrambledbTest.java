@@ -18,12 +18,12 @@ package org.apache.calcite.test;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Tests sql execution functionality.
@@ -35,30 +35,37 @@ public class ScrambledbTest {
     Connection connection = ScrambledbTestUtil.getConnection();
     Statement statement = connection.createStatement();
 
-    boolean b = statement.execute("create table customer (name varchar(20), age int default 0)");
+    boolean b = statement.execute(
+        "create table customer (name varchar(20), age int default 0, primary key (name))");
     assertThat(b, is(false));
 
-    int y = statement.executeUpdate("insert into customer (name) values ('max')");
+    int y = statement.executeUpdate(
+        "insert into customer (name) values ('max')");
     assertThat(y, is(1));
 
-    int x = statement.executeUpdate("insert into customer (name, age) values ('lisa', 31)");
+    int x = statement.executeUpdate(
+        "insert into customer (name, age) values ('lisa', 31)");
     assertThat(x, is(1));
 
-    x = statement.executeUpdate("insert into customer values ('lucas', 12)");
+    x = statement.executeUpdate(
+        "insert into customer values ('lucas', 12)");
     assertThat(x, is(1));
 
     try (ResultSet r = statement.executeQuery("select * from customer")) {
       String result = ScrambledbTestUtil.resultToString(r);
-      assertThat(result, is(
-          "NAME=max; AGE=null\n" +
-                "NAME=lisa; AGE=31\n" +
-                "NAME=lucas; AGE=12\n"));
+      assertThat(
+          result, is(
+          "NAME=max; AGE=nulln"
+              + "NAME=lisa; AGE=31n"
+              + "NAME=lucas; AGE=12\n"));
     }
 
-    b = statement.execute("create table hotel (name varchar(20), street varchar(25), zip int)");
+    b = statement.execute(
+        "create table hotel (name varchar(20), street varchar(25), zip int)");
     assertThat(b, is(false));
 
-    y = statement.executeUpdate("insert into hotel values ('b&b', 'hotel street', '12345')");
+    y = statement.executeUpdate(
+        "insert into hotel values ('b&b', 'hotel street', '12345')");
     assertThat(y, is(1));
 
     try (ResultSet r = statement.executeQuery("select * from hotel")) {
@@ -81,7 +88,9 @@ public class ScrambledbTest {
 
     statement.executeUpdate("insert into guest values ('lisa', 'b&b')");
 
-    try (ResultSet r = statement.executeQuery("select guest.name, customer.age from guest join customer on guest.name=customer.name")) {
+    try (ResultSet r = statement.executeQuery(
+        "select guest.name, customer.age from guest join "
+            + "customer on guest.name=customer.name")) {
       String result = ScrambledbTestUtil.resultToString(r);
       assertThat(result, is("NAME=lisa; AGE=31\n"));
     }

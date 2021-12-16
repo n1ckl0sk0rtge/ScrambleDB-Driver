@@ -17,7 +17,9 @@
 package org.apache.calcite.schema;
 import com.google.common.collect.ImmutableList;
 
-
+/**
+ * Interface for schemas to implement for creating table.
+ */
 public interface CreateTable {
 
   void createTable(String name, ImmutableList<TableColumn> columns);

@@ -16,24 +16,23 @@
  */
 package org.apache.calcite.scrambledb;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.rel.type.*;
+import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.scrambledb.tasks.CreateTableExecutor;
 import org.apache.calcite.scrambledb.tasks.DropTableExecutor;
 import org.apache.calcite.server.DdlExecutor;
 import org.apache.calcite.server.DdlExecutorImpl;
-import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.ddl.SqlDropObject;
 import org.apache.calcite.sql.parser.SqlAbstractParserImpl;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.parser.scrambledb.SqlScrambledbParserImpl;
 import org.apache.calcite.sql.type.BasicSqlType;
+
+import com.google.common.collect.ImmutableList;
 
 import java.io.Reader;
 import java.util.List;
@@ -117,7 +116,8 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
     List<String> rootTableColumnNames = exec.getRootTableColumnsNames();
 
     for (String name : rootTableColumnNames) {
-      exec.executeWith(ScrambledbExecutor.config.createSubtableString(
+      exec.executeWith(
+          ScrambledbExecutor.config.createSubtableString(
           exec.getName(),
           name));
     }

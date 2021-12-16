@@ -16,7 +16,6 @@
  */
 package org.apache.calcite.rel.logical;
 
-import org.apache.calcite.adapter.jdbc.JdbcTableScan;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;

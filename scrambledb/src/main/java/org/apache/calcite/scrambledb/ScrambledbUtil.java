@@ -20,8 +20,6 @@ import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.ContextSqlValidator;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
@@ -35,6 +33,8 @@ import java.util.List;
 /** A class for utility function related to Scrmbledb.
  */
 public class ScrambledbUtil {
+
+  private ScrambledbUtil(){}
 
   /** Returns the schema in which to create an object. */
   public static Pair<CalciteSchema, String> schema(CalcitePrepare.Context context,
@@ -56,7 +56,7 @@ public class ScrambledbUtil {
     return Pair.of(schema, name);
   }
 
-  public  static CalciteSchema schema(CalcitePrepare.Context context, boolean mutable) {
+  public static CalciteSchema schema(CalcitePrepare.Context context, boolean mutable) {
     final List<String> path = context.getDefaultSchemaPath();
 
     CalciteSchema schema = mutable ? context.getMutableRootSchema()
@@ -83,7 +83,10 @@ public class ScrambledbUtil {
     return containsMultiple(new ArrayList<>(), node, type);
   }
 
-  private static <T> List<RelNode> containsMultiple(List<RelNode> nodes, RelNode node, Class<T> type) {
+  private static <T> List<RelNode> containsMultiple(
+      List<RelNode> nodes,
+      RelNode node,
+      Class<T> type) {
     if (node.getClass() == type) {
       nodes.add(node);
     }

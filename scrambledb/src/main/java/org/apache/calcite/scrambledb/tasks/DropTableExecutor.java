@@ -14,21 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.tasks;
 
-import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.DropTable;
 import org.apache.calcite.schema.Table;
-import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
-import org.apache.calcite.scrambledb.parser.SqlCreateTable;
-import org.apache.calcite.sql.SqlDrop;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.ddl.SqlDropObject;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -39,7 +32,9 @@ import java.util.List;
 
 import static org.apache.calcite.util.Static.RESOURCE;
 
-
+/**
+ * Class for dropping table.
+ */
 public class DropTableExecutor {
 
   private final SqlDropObject drop;

@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.tools;
 
+/**
+ *  Default rewriter factory implementation.
+ */
 public interface SqlRewriterImplFactory {
 
   SqlRewriterImpl getRewriter();

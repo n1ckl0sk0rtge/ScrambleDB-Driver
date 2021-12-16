@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.test;
 
 import org.apache.calcite.scrambledb.rest.ScrambledbRestClient;
@@ -24,19 +23,22 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
+/**
+ * Class to test rest client.
+ */
 public class RestTest {
 
-  @Test
-  public void run() {
+  @Test public void run() {
     ScrambledbRestClient client = new ScrambledbRestClient();
-
     List<String> inp = Arrays.asList("primaryKey1", "primaryKey1");
-    // generate Pseudonyms
+    // generate Pseudonyms from primary keys
     List<String> res = client.getPseudonyms(inp);
-
+    // convert those pseudonyms to check if they have the same identity
     List<String> res_2 = client.convert(res);
-    System.out.println(res_2);
-
+    assertThat(res_2.get(0), is(res_2.get(1)));
   }
 
 }

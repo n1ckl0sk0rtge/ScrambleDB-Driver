@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rest.model;
 
 import java.util.List;
 
+/**
+ * Pattern for generation request.
+ */
 public class GenerationRequest {
 
   private String authToken;

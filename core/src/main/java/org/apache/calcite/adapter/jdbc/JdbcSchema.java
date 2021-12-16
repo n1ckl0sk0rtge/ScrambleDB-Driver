@@ -21,8 +21,22 @@ import org.apache.calcite.avatica.MetaImpl;
 import org.apache.calcite.avatica.SqlType;
 import org.apache.calcite.linq4j.function.Experimental;
 import org.apache.calcite.linq4j.tree.Expression;
-import org.apache.calcite.rel.type.*;
-import org.apache.calcite.schema.*;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
+import org.apache.calcite.rel.type.RelDataTypeSystem;
+import org.apache.calcite.rel.type.RelProtoDataType;
+import org.apache.calcite.schema.ColumnStrategy;
+import org.apache.calcite.schema.CreateTable;
+import org.apache.calcite.schema.DropTable;
+import org.apache.calcite.schema.Function;
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.SchemaFactory;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.SchemaVersion;
+import org.apache.calcite.schema.Schemas;
+import org.apache.calcite.schema.Table;
+import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactory;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
@@ -560,8 +574,7 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
     }
   }
 
-  @Override
-  public void dropTable(String name) {
+  @Override public void dropTable(String name) {
 
     try {
       Connection connection = dataSource.getConnection();
@@ -579,8 +592,7 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
 
   }
 
-  @Override
-  public void reloadTablesIntoSchema() {
+  @Override public void reloadTablesIntoSchema() {
     this.tableMap = getTableMap(true);
   }
 

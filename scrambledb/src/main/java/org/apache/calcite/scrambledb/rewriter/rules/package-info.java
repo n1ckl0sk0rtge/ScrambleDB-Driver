@@ -14,28 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.test;
-
-import org.apache.calcite.sql.parser.SqlParserImplFactory;
-import org.apache.calcite.sql.parser.SqlParserTest;
-import org.apache.calcite.sql.parser.scrambledb.SqlScrambledbParserImpl;
-
-import org.junit.jupiter.api.Test;
 
 /**
- * Tests custom parser functionality.
- *
+ * package info.
  */
-public class ScrambledbParserTest extends SqlParserTest {
-
-  @Override protected SqlParserImplFactory parserImplFactory() {
-    return SqlScrambledbParserImpl.FACTORY;
-  }
-
-  @Test void testCreateScrambledTable() {
-    sql("create table x (i int not null, j varchar(5) null)")
-        .ok("CREATE TABLE `X` (`I` INTEGER NOT NULL, `J` VARCHAR(5))");
-  }
-
-
-}
+package org.apache.calcite.scrambledb.rewriter.rules;

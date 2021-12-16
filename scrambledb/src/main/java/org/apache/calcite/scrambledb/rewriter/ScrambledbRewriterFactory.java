@@ -14,17 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rewriter;
 
 import org.apache.calcite.tools.SqlRewriterImpl;
 import org.apache.calcite.tools.SqlRewriterImplFactory;
 
+/**
+ * Factory for instantiate scrambleDb rewriter.
+ */
 public class ScrambledbRewriterFactory {
 
+  private ScrambledbRewriterFactory() {}
+
   public static final SqlRewriterImplFactory FACTORY = new SqlRewriterImplFactory() {
-    @Override
-    public SqlRewriterImpl getRewriter() {
+    @Override public SqlRewriterImpl getRewriter() {
       return new ScrambledbRewriter();
     }
   };

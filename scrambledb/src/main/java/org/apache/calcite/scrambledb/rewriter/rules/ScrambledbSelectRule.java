@@ -14,12 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.rewriter.rules;
-
-import com.google.common.collect.ImmutableList;
-
-import com.sun.jmx.remote.internal.ArrayQueue;
 
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.adapter.jdbc.JdbcConvention;
@@ -49,25 +44,33 @@ import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.SqlRewriterRule;
 
-import java.util.*;
+import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+/**
+ * Rewriting rule for select statements.
+ */
 public class ScrambledbSelectRule implements SqlRewriterRule  {
 
-  @Override
-  public RelNode apply(RelNode node, CalcitePrepare.Context context) {
-    /*
-     * LogicalProject(NAME=[$0], AGE=[$1])
-     *  JdbcTableScan(table=[[adhoc, CUSTOMER]])
-     *
-     * transferred to
-     *
-     * LogicalProject(NAME=[$0], AGE=[$1])
-     *  LogicalProject(NAME=[$1], AGE=[$3])
-     *    LogicalJoin(condition=[=($0, $2)], joinType=[full])
-     *      JdbcTableScan(table=[[adhoc, CUSTOMER_NAME]])
-     *       JdbcTableScan(table=[[adhoc, CUSTOMER_AGE]])
-     *
-     */
+  /**
+   * Explanation.
+   *
+   * LogicalProject(NAME=[$0], AGE=[$1])
+   *  JdbcTableScan(table=[[adhoc, CUSTOMER]])
+   *
+   * transferred to
+   *
+   * LogicalProject(NAME=[$0], AGE=[$1])
+   *  LogicalProject(NAME=[$1], AGE=[$3])
+   *    LogicalJoin(condition=[=($0, $2)], joinType=[full])
+   *      JdbcTableScan(table=[[adhoc, CUSTOMER_NAME]])
+   *       JdbcTableScan(table=[[adhoc, CUSTOMER_AGE]])
+   *
+   */
+  @Override public RelNode apply(RelNode node, CalcitePrepare.Context context) {
 
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
@@ -79,7 +82,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     Stack<RelNode> replacements = new Stack<>();
     for (RelNode scan : scans) {
       replacements.add(
-          getScrambledbTableScan( (JdbcTableScan) scan, schema, context));
+          getScrambledbTableScan((JdbcTableScan) scan, schema, context));
     }
     // replace each default JdbcTableScan with a node for scanning the scrambled tables
     try {
@@ -91,10 +94,9 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     return node;
   }
 
-  @Override
-  public boolean isApplicable(RelNode node, SqlKind kind) {
-    return kind == SqlKind.SELECT &&
-        ScrambledbUtil.contains(node, JdbcTableScan.class) != null;
+  @Override public boolean isApplicable(RelNode node, SqlKind kind) {
+    return kind == SqlKind.SELECT
+        && ScrambledbUtil.contains(node, JdbcTableScan.class) != null;
   }
 
   private RelNode getScrambledbTableScan(
@@ -118,7 +120,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     // start with 1, because each subtable contains in the first column the linker value. And then
     // increment the counter by 2.
     int counter = 1;
-    for (RelDataTypeField field : columnDataTypeFields){
+    for (RelDataTypeField field : columnDataTypeFields) {
       String columnName = field.getName();
       // generating the subtable name by using the global config
       String subTableName =
@@ -130,7 +132,8 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       assert subTable != null;
       // collect subtables
       subTables
-          .add(getTableScan(
+          .add(
+              getTableScan(
               context,
               schema.plus(),
               defaultJdbcTableScan,
@@ -257,9 +260,6 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
             subTableName,
             AbstractQueryableTable.class)
     );
-    /*
-     * Define the new JdbcTableScan
-     */
     // Define the JdbcConvention
     JdbcConvention newJdbcConvention = JdbcConvention.of(
         defaultJdbcTableScan.jdbcTable.jdbcSchema.dialect,
