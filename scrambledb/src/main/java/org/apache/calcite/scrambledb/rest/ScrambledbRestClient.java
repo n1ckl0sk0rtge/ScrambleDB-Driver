@@ -33,9 +33,10 @@ import javax.ws.rs.core.Response;
 public class ScrambledbRestClient {
 
   private final RestServicesInterface proxy;
+  private final Client client;
 
   public ScrambledbRestClient() {
-    Client client = ResteasyClientBuilderImpl.newClient();
+    this.client = ResteasyClientBuilderImpl.newClient();
     WebTarget target = client.target("http://192.168.64.3:8080");
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     this.proxy = restTarget.proxy(RestServicesInterface.class);
@@ -55,6 +56,10 @@ public class ScrambledbRestClient {
     List<String> res = response.readEntity(List.class);
     response.close();
     return res;
+  }
+
+  public void close() {
+    this.client.close();
   }
 
 }

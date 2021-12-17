@@ -15,14 +15,18 @@
  * limitations under the License.
  */
 package org.apache.calcite.schema;
+import org.apache.calcite.sql.ddl.SqlKeyConstraint;
+
 import com.google.common.collect.ImmutableList;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Interface for schemas to implement for creating table.
  */
 public interface CreateTable {
 
-  void createTable(String name, ImmutableList<TableColumn> columns);
+  void createTable(String name, ImmutableList<TableColumn> columns, @Nullable SqlKeyConstraint keyConstraint);
 
   void reloadTablesIntoSchema();
 

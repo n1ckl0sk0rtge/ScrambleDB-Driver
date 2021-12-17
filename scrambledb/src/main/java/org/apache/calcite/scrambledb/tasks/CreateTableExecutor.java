@@ -31,6 +31,7 @@ import org.apache.calcite.scrambledb.parser.SqlCreateTable;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.ddl.SqlColumnDeclaration;
+import org.apache.calcite.sql.ddl.SqlKeyConstraint;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
 
@@ -45,7 +46,8 @@ public class CreateTableExecutor {
 
   private final SqlCreateTable create;
   private final String name;
-  public  ImmutableList<TableColumn> columns;
+  public ImmutableList<TableColumn> columns;
+  public SqlKeyConstraint keyConstraint;
   private final CalcitePrepare.Context context;
   private final JavaTypeFactory typeFactory;
   private final CalciteSchema schema;
@@ -86,10 +88,12 @@ public class CreateTableExecutor {
         }
         columnBuilder.add(
             TableColumn.of(
-            columnDeclaration.name.toString(),
-            columnDeclaration.expression,
-            type,
-            columnDeclaration.strategy));
+                columnDeclaration.name.toString(),
+                columnDeclaration.expression,
+                type,
+                columnDeclaration.strategy));
+      } else if (c.e instanceof SqlKeyConstraint) {
+        this.keyConstraint = (SqlKeyConstraint) c.e;
       } else {
         throw new AssertionError(c.e.getClass());
       }
@@ -101,7 +105,7 @@ public class CreateTableExecutor {
     return name;
   }
 
-  public void executeWith(String name, ImmutableList<TableColumn> columns)
+  public void executeWith(String name, ImmutableList<TableColumn> columns, boolean applyKeyConstraint)
       throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
     if (schema.plus().getTable(this.name) != null) {
       // Table exists.
@@ -115,7 +119,8 @@ public class CreateTableExecutor {
         CreateTable createTableSchema = (CreateTable) schema.schema;
         createTableSchema.createTable(
             name,
-            columns);
+            columns,
+            applyKeyConstraint ? this.keyConstraint : null);
         createTableSchema.reloadTablesIntoSchema();
       } else {
         throw new ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema(schema);
@@ -124,24 +129,7 @@ public class CreateTableExecutor {
   }
 
   public void execute() throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
-    if (schema.plus().getTable(name) != null) {
-      // Table exists.
-      if (!create.getReplace()) {
-        // They did not specify IF NOT EXISTS, so give error.
-        throw SqlUtil.newContextException(create.name.getParserPosition(),
-            RESOURCE.tableExists(name));
-      }
-    } else {
-      if (schema.schema instanceof CreateTable) {
-        CreateTable createTableSchema = (CreateTable) schema.schema;
-        createTableSchema.createTable(
-            create.name.toString(),
-            this.columns);
-        createTableSchema.reloadTablesIntoSchema();
-      } else {
-        throw new ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema(schema);
-      }
-    }
+    executeWith(create.name.toString(), this.columns, true);
   }
 
 }

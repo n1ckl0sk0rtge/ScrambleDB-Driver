@@ -99,7 +99,8 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
             ImmutableList.<TableColumn>builder()
                 .add(linkerColumn)
                 .add(column)
-                .build());
+                .build(),
+            false);
       }
 
     } catch (Exception e) {

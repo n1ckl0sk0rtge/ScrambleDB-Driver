@@ -72,6 +72,12 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
    */
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context) {
 
+    // TODO:
+    // rewrite select statement to select data from each scrambled table.
+    // Grep the data from those scans and convert the pseudonyms.
+    // Create virtual Tables (logicalTableModify)
+    // Join after conversion
+
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
     // if not, an error would raise lines before.

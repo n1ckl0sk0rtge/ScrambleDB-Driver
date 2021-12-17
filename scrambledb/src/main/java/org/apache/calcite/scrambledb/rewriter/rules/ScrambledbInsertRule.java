@@ -37,6 +37,7 @@ import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.scrambledb.rest.ScrambledbRestClient;
+import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.SqlRewriterRule;
 
@@ -47,8 +48,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Rule for rewriting insert statements.
@@ -97,6 +99,8 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     LogicalTableModify logicalTableModify =
         (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
     assert logicalTableModify != null;
+    int indexOfPrimaryKey = getPrimaryKeyColumn(logicalTableModify);
+
     RelOptTable tableDefinition = logicalTableModify.getTable();
     List<String> qualifiedName = tableDefinition.getQualifiedName();
     assert qualifiedName.get(1) != null;
@@ -112,9 +116,19 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
     RelNode newNode = node;
 
+    // Connect to converter
+    ScrambledbRestClient client = new ScrambledbRestClient();
+
     for (int i = 0; i < tuples.size(); i++) {
       // new line in the table
-      List<RexLiteral> linker = getLinkers(tuples.get(i).size(), context);
+      RexLiteral referenceKey;
+      if (indexOfPrimaryKey > -1) {
+        referenceKey = tuples.get(i).get(indexOfPrimaryKey);
+      } else {
+        // default: first column equals primnary key
+        referenceKey = tuples.get(i).get(0);
+      }
+      List<RexLiteral> linker = getLinkers(client, referenceKey, tuples.get(i).size(), context);
       for (int j = 0; j < tuples.get(i).size(); j++) {
         // new value in table (in column)
         RelDataTypeField currentValueRelDataType = logicalValues.getRowType().getFieldList().get(j);
@@ -232,6 +246,10 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
       }
     }
+
+    // Close Rest connection
+    client.close();
+
     return newNode;
   }
 
@@ -248,17 +266,28 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     return null;
   }
 
-  private List<RexLiteral> getLinkers(int count, CalcitePrepare.Context context) {
-    List<RexLiteral> links = new ArrayList<>();
-
-    ScrambledbRestClient client = new ScrambledbRestClient();
-
-    for (int i = 0; i < count; i++) {
-      RexBuilder rexBuilder = new RexBuilder(context.getTypeFactory());
-      RexLiteral rex = rexBuilder.makeLiteral("");
-      links.add(rex);
+  private int getPrimaryKeyColumn(LogicalTableModify table) {
+    for (RelDataTypeField field : table.getTable().getRowType().getFieldList()) {
+      SqlCollation collation = field.getValue().getCollation();
+      if (collation != null) {
+        if (collation.getCollationName().contains("primary")) {
+          return field.getIndex();
+        }
+      }
     }
-    return links;
+    return -1;
+  }
+
+  private List<RexLiteral> getLinkers(ScrambledbRestClient client, RexLiteral primaryKey, int count, CalcitePrepare.Context context) {
+    List<String> input = Collections.nCopies(count, primaryKey.toString().replaceAll("[']*", ""));
+    List<String> pseudonyms = client.getPseudonyms(input);
+
+    return pseudonyms.stream().map(
+        pse -> {
+          RexBuilder rexBuilder = new RexBuilder(context.getTypeFactory());
+          return rexBuilder.makeLiteral(pse);
+        }
+    ).collect(Collectors.toList());
   }
 
 }

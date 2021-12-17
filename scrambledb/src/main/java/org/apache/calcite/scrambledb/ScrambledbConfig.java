@@ -32,7 +32,7 @@ public class ScrambledbConfig {
 
   private final String linkerName = "linkerID";
   private final String defaultValue = "Null";
-  private final Integer size = 255;
+  private final Integer size = 500;
   private final SqlTypeName type = SqlTypeName.VARCHAR;
   private final RelDataType linkerRelDataType;
   private final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;

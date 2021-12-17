@@ -40,6 +40,7 @@ import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactory;
 import org.apache.calcite.sql.SqlDialectFactoryImpl;
+import org.apache.calcite.sql.ddl.SqlKeyConstraint;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Pair;
@@ -538,7 +539,7 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
     }
   }
 
-  @Override public void createTable(String name, ImmutableList<TableColumn> columns) {
+  @Override public void createTable(String name, ImmutableList<TableColumn> columns, @Nullable SqlKeyConstraint keyConstraint) {
 
     try {
       Connection connection = dataSource.getConnection();
@@ -547,7 +548,7 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
       String sqlFunction = "CREATE TABLE";
 
       StringBuilder col = new StringBuilder();
-      Integer i = 0;
+      int i = 0;
 
       for (TableColumn c : columns) {
         i++;
@@ -565,7 +566,13 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
         }
       }
 
-      String sql = sqlFunction + " " + name + " (" + col + ");";
+      String keyConstraintOperator = "";
+      if (keyConstraint != null) {
+         keyConstraintOperator = " ,"
+             + keyConstraint.toString().replaceAll("[`]*", "") + " ";
+      }
+
+      String sql = sqlFunction + " " + name + " (" + col + keyConstraintOperator + " );";
       statement.execute(sql);
       statement.close();
       connection.close();

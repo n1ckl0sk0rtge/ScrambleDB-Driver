@@ -55,7 +55,7 @@ public class ScrambledbTest {
       String result = ScrambledbTestUtil.resultToString(r);
       assertThat(
           result, is(
-          "NAME=max; AGE=nulln"
+          "NAME=max; AGE=null"
               + "NAME=lisa; AGE=31n"
               + "NAME=lucas; AGE=12\n"));
     }
