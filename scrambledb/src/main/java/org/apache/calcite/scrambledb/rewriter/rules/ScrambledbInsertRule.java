@@ -50,12 +50,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
  * Rule for rewriting insert statements.
  */
 public class ScrambledbInsertRule implements SqlRewriterRule {
+
+  private ScrambledbRestClient client;
 
   /**
    * Explanation.
@@ -96,6 +99,8 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context)
       throws ScrambledbErrors.RewriteInsertRuleError, SQLException {
 
+    this.client = new ScrambledbRestClient();
+
     LogicalTableModify logicalTableModify =
         (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
     assert logicalTableModify != null;
@@ -116,9 +121,6 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
     RelNode newNode = node;
 
-    // Connect to converter
-    ScrambledbRestClient client = new ScrambledbRestClient();
-
     for (int i = 0; i < tuples.size(); i++) {
       // new line in the table
       RexLiteral referenceKey;
@@ -128,7 +130,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         // default: first column equals primnary key
         referenceKey = tuples.get(i).get(0);
       }
-      List<RexLiteral> linker = getLinkers(client, referenceKey, tuples.get(i).size(), context);
+      List<RexLiteral> linker = getLinkers(this.client, referenceKey, tuples.get(i).size(), context);
       for (int j = 0; j < tuples.get(i).size(); j++) {
         // new value in table (in column)
         RelDataTypeField currentValueRelDataType = logicalValues.getRowType().getFieldList().get(j);
@@ -222,7 +224,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
                 // T_<column>
                 subTableName),
             table,
-            tableDefinition.getExpression(Queryable.class));
+            Objects.requireNonNull(tableDefinition.getExpression(Queryable.class)));
 
         newNode = new LogicalTableModify(
             logicalTableModify.getCluster(),
@@ -246,9 +248,8 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
       }
     }
-
-    // Close Rest connection
-    client.close();
+    // close rest client
+    this.client.close();
 
     return newNode;
   }
@@ -289,5 +290,4 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         }
     ).collect(Collectors.toList());
   }
-
 }

@@ -17,12 +17,11 @@
 package org.apache.calcite.scrambledb.rewriter.rules;
 
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
-import org.apache.calcite.adapter.jdbc.JdbcConvention;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.adapter.jdbc.JdbcTableScan;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
@@ -30,14 +29,19 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
+import org.apache.calcite.scrambledb.ScrambledbInMemoryTable;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
+import org.apache.calcite.scrambledb.rest.ScrambledbRestClient;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
@@ -46,14 +50,15 @@ import org.apache.calcite.tools.SqlRewriterRule;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Rewriting rule for select statements.
  */
 public class ScrambledbSelectRule implements SqlRewriterRule  {
+
+  private ScrambledbRestClient client;
 
   /**
    * Explanation.
@@ -72,11 +77,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
    */
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context) {
 
-    // TODO:
-    // rewrite select statement to select data from each scrambled table.
-    // Grep the data from those scans and convert the pseudonyms.
-    // Create virtual Tables (logicalTableModify)
-    // Join after conversion
+    this.client = new ScrambledbRestClient();
 
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
@@ -96,6 +97,8 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     } catch (Exception e) {
       e.printStackTrace();
     }
+    // close rest client connection
+    this.client.close();
     // return unchanged node as default
     return node;
   }
@@ -117,7 +120,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     // create a Stack of JdbcTableScans. This stack will contain all necessary table scans to get
     // the whole rootTable. Because all columns (values) are scrambled over different tables, we
     // have to perform a jdbCTableScan for each subtable (column)
-    Stack<JdbcTableScan> subTables = new Stack<>();
+    Stack<JdbcTable> subTables = new Stack<>();
     // relevant values = actual values in the database, not the linker
     // both list contains meta information for creating a join and a projection over the
     // scrambled tables. The linker metadata will be ignored here.
@@ -137,14 +140,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       // and there are no other operations allowed that delete sub-tables.
       assert subTable != null;
       // collect subtables
-      subTables
-          .add(
-              getTableScan(
-              context,
-              schema.plus(),
-              defaultJdbcTableScan,
-              subTable,
-              subTableName));
+      subTables.add(subTable);
       // create references to the relevant values for the projection
       RelDataTypeField relevantField = subTable.getRowType(context.getTypeFactory())
           // 1 = because 0 is always the linker and 1 always the actual value
@@ -155,15 +151,19 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       // increment counter with 2
       counter += 2;
     }
+
+    // convert those tables to in memory tables with pseudonyms converted to identities
+    Stack<LogicalTableScan> inMemoryTableScans =
+        getConvertedTables(context, schema.plus(), defaultJdbcTableScan, subTables);
     // create the join over the scrambled tables
     final FrameworkConfig config = Frameworks.newConfigBuilder()
         .defaultSchema(schema.plus())
         .build();
     RelBuilder builder = RelBuilder.create(config);
     // start with the first right join element
-    RelNode rightJoinElement = subTables.pop();
+    RelNode rightJoinElement = inMemoryTableScans.pop();
     // join all subtables together -> creating the relational expr for that
-    LogicalJoin join = (LogicalJoin) join(subTables, rightJoinElement, builder);
+    LogicalJoin join = (LogicalJoin) join(inMemoryTableScans, rightJoinElement, builder);
     // define a projection over the joined tables.
     // the join would look like this:
     //
@@ -220,7 +220,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
   }
 
   private RelNode join(
-      Stack<JdbcTableScan> left,
+      Stack<LogicalTableScan> left,
       RelNode right,
       RelBuilder builder) {
     if (left.empty()) {
@@ -237,52 +237,98 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     }
   }
 
-  private JdbcTableScan getTableScan(
+  private Stack<LogicalTableScan> getConvertedTables(
       CalcitePrepare.Context context,
       SchemaPlus schemaPlus,
       JdbcTableScan defaultJdbcTableScan,
-      JdbcTable subTable,
-      String subTableName) {
+      Stack<JdbcTable> tables) {
     // adhoc value
     String adhoc = defaultJdbcTableScan.getTable().getQualifiedName().get(0);
-    // Build RelDataType from field
-    RelDataTypeFactory.Builder relDataTypeBuilder =
-        new RelDataTypeFactory.Builder(context.getTypeFactory());
-    relDataTypeBuilder
-        .addAll(subTable.getRowType(context.getTypeFactory())
-            .getFieldList());
-    // define the new table from dataType
-    RelOptTable newTableDefinition = RelOptTableImpl.create(
-        defaultJdbcTableScan.getTable().getRelOptSchema(),
-        relDataTypeBuilder.build(),
-        ImmutableList.of(
-            //adhoc
-            adhoc,
-            // T_<column>
-            subTableName),
-        subTable,
-        subTable.getExpression(
-            schemaPlus,
-            subTableName,
-            AbstractQueryableTable.class)
-    );
-    // Define the JdbcConvention
-    JdbcConvention newJdbcConvention = JdbcConvention.of(
-        defaultJdbcTableScan.jdbcTable.jdbcSchema.dialect,
-        subTable.getExpression(
-            schemaPlus,
-            subTableName,
-            AbstractQueryableTable.class),
-        adhoc + subTableName
-    );
-    // Define new JdbcTableScan from JdbcConvention
-    return new JdbcTableScan(
-        defaultJdbcTableScan.getCluster(),
-        defaultJdbcTableScan.getHints(),
-        newTableDefinition,
-        subTable,
-        newJdbcConvention
-    );
+
+    Stack<LogicalTableScan> inMemoryTableScan = new Stack<>();
+
+    List<List<String>> pseudonyms = new ArrayList<>();
+    List<List<Object[]>> data = new ArrayList<>();
+    for (JdbcTable table : tables) {
+      // get JdbcTable values (pseudonyms and data)
+      Map<Object, Object[]> tableData = table.scan(context.getDataContext()).toMap(key -> {
+        // there should always be at least one element for each row in the result set.
+        // only assert here to remove ide warning
+        assert key[0] != null;
+        return key[0];
+      });
+      // grep the keySet from the map, which contains only the pseudonyms
+      pseudonyms.add(
+          tableData.keySet().stream().map(Object::toString).collect(Collectors.toList())
+      );
+      data.add(new ArrayList<>(tableData.values()));
+    }
+    // convert pseudonyms to identities
+    List<String> identities = client.convert(
+        pseudonyms.stream()
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList()));
+
+    int identityCounter = 0;
+    for (int i=0; i < tables.size(); i++) {
+
+      String subTableName = tables.get(i).jdbcTableName;
+      JdbcTable subTable = tables.get(i);
+
+      int newIdentityCounter = identityCounter + pseudonyms.get(0).size();
+      Object[] tableRelatedIdentities = identities.stream().skip(identityCounter).limit(newIdentityCounter).toArray();
+      identityCounter = newIdentityCounter;
+
+      // replace every pseudonym in the table data with the new identity
+      List<Object[]> newTableData = new ArrayList<>();
+      for (int j=0; j < tableRelatedIdentities.length; j++) {
+        Object[] values = data.get(i).get(j);
+        ImmutableList<Object> col = ImmutableList.<Object>builder()
+            .add(tableRelatedIdentities[j])
+            .addAll(Arrays.asList(values).subList(1, values.length))
+            .build();
+        newTableData.add(col.toArray());
+      }
+      // create a new in memory table from identities
+      // Build RelDataType from field
+      RelDataTypeFactory.Builder relDataTypeBuilder =
+          new RelDataTypeFactory.Builder(context.getTypeFactory());
+      relDataTypeBuilder
+          .addAll(tables.get(i).getRowType(context.getTypeFactory())
+              .getFieldList());
+
+      Table inMemoryTable = new ScrambledbInMemoryTable(
+              tables.get(i).jdbcTableName,
+              RelDataTypeImpl.proto(relDataTypeBuilder.build()),
+              newTableData);
+      // add table to schema
+      ScrambledbUtil.schema(context, true).add(subTableName, inMemoryTable);
+
+      // define the new table from dataType
+      RelOptTable newTableDefinition = RelOptTableImpl.create(
+          defaultJdbcTableScan.getTable().getRelOptSchema(),
+          relDataTypeBuilder.build(),
+          ImmutableList.of(
+              //adhoc
+              adhoc,
+              // T_<column>
+              subTableName),
+          inMemoryTable,
+          subTable.getExpression(
+              schemaPlus,
+              subTableName,
+              AbstractQueryableTable.class)
+      );
+
+      inMemoryTableScan.add( new LogicalTableScan(
+          defaultJdbcTableScan.getCluster(),
+          defaultJdbcTableScan.getTraitSet().replace(ConventionTraitDef.INSTANCE.getDefault()),
+          defaultJdbcTableScan.getHints(),
+          newTableDefinition
+      ));
+    }
+
+    return inMemoryTableScan;
   }
 
 }
