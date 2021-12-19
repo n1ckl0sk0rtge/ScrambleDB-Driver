@@ -28,9 +28,11 @@ import java.sql.SQLException;
 public class ScrambledbTestUtil {
 
   static String config =
-      "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory; "
+      "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory;"
           + "parserFactory=org.apache.calcite.scrambledb.ScrambledbExecutor#PARSER_FACTORY;"
           + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
+          + "converter.url=http://192.168.64.3:8080;"
+          + "converter.apikey=test;"
           + "schema.jdbcDriver=com.mysql.cj.jdbc.Driver;"
           + "schema.jdbcUrl=jdbc:mysql://192.168.64.3/datalake;"
           + "schema.jdbcUser=datalake;"

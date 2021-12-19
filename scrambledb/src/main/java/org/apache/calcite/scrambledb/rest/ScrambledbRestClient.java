@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.scrambledb.rest;
 
+import org.apache.calcite.config.CalciteConnectionProperty;
+import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.scrambledb.rest.model.ConversionRequest;
 import org.apache.calcite.scrambledb.rest.model.GenerationRequest;
 
@@ -34,16 +36,18 @@ public class ScrambledbRestClient {
 
   private final RestServicesInterface proxy;
   private final Client client;
+  private final String apikey;
 
-  public ScrambledbRestClient() {
+  public ScrambledbRestClient(CalcitePrepare.Context context) {
+    this.apikey = context.config().converterAPIKey();
     this.client = ResteasyClientBuilderImpl.newClient();
-    WebTarget target = client.target("http://192.168.64.3:8080");
+    WebTarget target = client.target(context.config().converterConnection());
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     this.proxy = restTarget.proxy(RestServicesInterface.class);
   }
 
   public List<String> getPseudonyms(List<String> input) {
-    GenerationRequest request = new GenerationRequest("test", input);
+    GenerationRequest request = new GenerationRequest(this.apikey, input);
     Response response = proxy.pseudonyms(request);
     List<String> res = response.readEntity(List.class);
     response.close();
@@ -51,7 +55,7 @@ public class ScrambledbRestClient {
   }
 
   public List<String> convert(List<String> pseudonyms) {
-    ConversionRequest request = new ConversionRequest("test", pseudonyms);
+    ConversionRequest request = new ConversionRequest(this.apikey, pseudonyms);
     Response response = proxy.convert(request);
     List<String> res = response.readEntity(List.class);
     response.close();

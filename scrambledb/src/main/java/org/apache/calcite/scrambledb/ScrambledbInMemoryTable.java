@@ -14,12 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
-import org.apache.calcite.linq4j.*;
+import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.linq4j.Enumerator;
+import org.apache.calcite.linq4j.Linq4j;
+import org.apache.calcite.linq4j.QueryProvider;
+import org.apache.calcite.linq4j.Queryable;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
@@ -32,7 +35,10 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.schema.*;
+import org.apache.calcite.schema.ModifiableTable;
+import org.apache.calcite.schema.ScannableTable;
+import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.schema.impl.AbstractTableQueryable;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -44,6 +50,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class provides an in memory table. It will be used to store the converted results
+ * from scrambledb in a temporary table.
+ */
 public class ScrambledbInMemoryTable
     extends AbstractQueryableTable implements ScannableTable, ModifiableTable {
 
@@ -51,7 +61,10 @@ public class ScrambledbInMemoryTable
   private List<@Nullable Object[]> list = new ArrayList<Object[]>();
   private final RelProtoDataType protoRowType;
 
-  public ScrambledbInMemoryTable(String name, RelProtoDataType protoRowType, List<@Nullable Object[]> data) {
+  public ScrambledbInMemoryTable(
+      String name,
+      RelProtoDataType protoRowType,
+      List<@Nullable Object[]> data) {
     super(Object[].class);
     this.tableName = name;
     this.protoRowType = protoRowType;
@@ -66,8 +79,7 @@ public class ScrambledbInMemoryTable
     return list;
   }
 
-  @Override
-  public TableModify toModificationRel(RelOptCluster cluster, RelOptTable table,
+  @Override public TableModify toModificationRel(RelOptCluster cluster, RelOptTable table,
       Prepare.CatalogReader catalogReader, RelNode child, TableModify.Operation operation,
       @Nullable List<String> updateColumnList, @Nullable List<RexNode> sourceExpressionList,
       boolean flattened) {
@@ -91,8 +103,7 @@ public class ScrambledbInMemoryTable
     return Object[].class;
   }
 
-  @Override
-  public Expression getExpression(SchemaPlus schema, String tableName, Class clazz) {
+  @Override public Expression getExpression(SchemaPlus schema, String tableName, Class clazz) {
     return Schemas.tableExpression(schema, elementType, tableName, Queryable.class);
   }
 
@@ -100,18 +111,15 @@ public class ScrambledbInMemoryTable
     return protoRowType.apply(typeFactory);
   }
 
-  @Override
-  public <C> C unwrapOrThrow(Class<C> aClass) {
+  @Override public <C> C unwrapOrThrow(Class<C> aClass) {
     return super.unwrapOrThrow(aClass);
   }
 
-  @Override
-  public <C> Optional<C> maybeUnwrap(Class<C> aClass) {
+  @Override public <C> Optional<C> maybeUnwrap(Class<C> aClass) {
     return super.maybeUnwrap(aClass);
   }
 
-  @Override
-  public Enumerable<@Nullable Object[]> scan(DataContext root) {
+  @Override public Enumerable<@Nullable Object[]> scan(DataContext root) {
     return Linq4j.asEnumerable(this.list);
   }
 }

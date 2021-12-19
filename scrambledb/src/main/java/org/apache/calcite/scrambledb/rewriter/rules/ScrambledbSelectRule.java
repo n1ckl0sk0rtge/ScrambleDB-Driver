@@ -22,7 +22,7 @@ import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.adapter.jdbc.JdbcTableScan;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.plan.*;
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
@@ -31,14 +31,12 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.Table;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbInMemoryTable;
@@ -52,7 +50,12 @@ import org.apache.calcite.tools.SqlRewriterRule;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 /**
@@ -79,7 +82,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
    */
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context) {
 
-    this.client = new ScrambledbRestClient();
+    this.client = new ScrambledbRestClient(context);
 
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
@@ -95,6 +98,9 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     }
     // replace each default JdbcTableScan with a node for scanning the scrambled tables
     try {
+      // close rest client connection
+      this.client.close();
+      // return updated query
       return replaceJdbcTableScanWithScrambledbTableScan(node, replacements, new Stack<>());
     } catch (Exception e) {
       e.printStackTrace();
@@ -157,6 +163,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     final FrameworkConfig config = Frameworks.newConfigBuilder()
         .defaultSchema(schema.plus())
         .build();
+
     RelBuilder builder = RelBuilder.create(config);
     // convert those tables to in memory tables with pseudonyms converted to identities
     Stack<TableScan> inMemoryTableScans =
@@ -272,17 +279,18 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
             .collect(Collectors.toList()));
 
     int identityCounter = 0;
-    for (int i=0; i < tables.size(); i++) {
+    for (int i = 0; i < tables.size(); i++) {
 
       String subTableName = tables.get(i).jdbcTableName;
 
       int numberOfIdentitiesForThisTable = pseudonyms.get(i).size();
-      Object[] tableRelatedIdentities = identities.stream().skip(identityCounter).limit(numberOfIdentitiesForThisTable).toArray();
+      Object[] tableRelatedIdentities =
+          identities.stream().skip(identityCounter).limit(numberOfIdentitiesForThisTable).toArray();
       identityCounter += numberOfIdentitiesForThisTable;
 
       // replace every pseudonym in the table data with the new identity
       List<Object[]> newTableData = new ArrayList<>();
-      for (int j=0; j < tableRelatedIdentities.length; j++) {
+      for (int j = 0; j < tableRelatedIdentities.length; j++) {
         Object[] values = data.get(i).get(j);
         ImmutableList<Object> col = ImmutableList.<Object>builder()
             .add(tableRelatedIdentities[j])
@@ -302,7 +310,13 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
               tables.get(i).jdbcTableName,
               RelDataTypeImpl.proto(relDataTypeBuilder.build()),
               newTableData);
-      // add table to schema
+      // get current schema
+      CalciteSchema schema = ScrambledbUtil.schema(context, true);
+      // if table exists in memory, remove it
+      if (schema.getTable(subTableName, true) != null) {
+        schema.removeTable(subTableName);
+      }
+      // add new in memory table to schema
       ScrambledbUtil.schema(context, true).add(subTableName, inMemoryTable);
 
       // define the new table from dataType
@@ -321,7 +335,8 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
               AbstractQueryableTable.class)
       );
 
-      inMemoryTableScan.add(EnumerableTableScan.create(
+      inMemoryTableScan.add(
+          EnumerableTableScan.create(
           defaultJdbcTableScan.getCluster(),
           newTableDefinition
       ));

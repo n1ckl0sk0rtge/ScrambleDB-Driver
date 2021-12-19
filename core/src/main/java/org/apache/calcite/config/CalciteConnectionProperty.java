@@ -113,6 +113,17 @@ public enum CalciteConnectionProperty implements ConnectionProperty {
    * {@link SqlRewriterFactory}. */
   REWRITER_FACTORY("rewriterFactory", Type.PLUGIN, null, false),
 
+  /** Converter connection url
+   *
+   * <p>The url to the converter instance for scrambelDB.
+   */
+  CONVERTER_URL("converter.url", Type.STRING, null, false),
+  /** Converter connection url
+   *
+   * <p>The url to the converter instance for scrambelDB.
+   */
+  CONVERTER_APIKEY("converter.apikey", Type.STRING, null, false),
+
   /** Name of initial schema. */
   SCHEMA("schema", Type.STRING, null, false),
 

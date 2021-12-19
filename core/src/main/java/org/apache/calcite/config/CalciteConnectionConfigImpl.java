@@ -160,6 +160,16 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getPlugin(rewriterFactoryClass, defaultRewriterFactory);
   }
 
+  @Override public String converterConnection() {
+    return CalciteConnectionProperty.CONVERTER_URL.wrap(properties)
+        .getString("");
+  }
+
+  @Override public String converterAPIKey() {
+    return CalciteConnectionProperty.CONVERTER_APIKEY.wrap(properties)
+        .getString("");
+  }
+
   @Override public <T> @PolyNull T schemaFactory(Class<T> schemaFactoryClass,
       @PolyNull T defaultSchemaFactory) {
     return CalciteConnectionProperty.SCHEMA_FACTORY.wrap(properties)

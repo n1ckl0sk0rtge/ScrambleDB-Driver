@@ -105,8 +105,12 @@ public class CreateTableExecutor {
     return name;
   }
 
-  public void executeWith(String name, ImmutableList<TableColumn> columns, boolean applyKeyConstraint)
+  public void executeWith(
+      String name,
+      ImmutableList<TableColumn> columns,
+      boolean applyKeyConstraint)
       throws ScrambledbErrors.CreateTableFunctionalityIsNotPartOfSchema {
+
     if (schema.plus().getTable(this.name) != null) {
       // Table exists.
       if (!create.getReplace()) {

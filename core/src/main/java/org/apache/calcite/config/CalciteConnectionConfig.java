@@ -85,6 +85,12 @@ public interface CalciteConnectionConfig extends ConnectionConfig {
    * is not null, the result is never null. */
   <T> @PolyNull T rewriterFactory(Class<T> rewriterFactoryClass,
       @PolyNull T defaultRewriterFactory);
+  /** Returns the connection url for the converter
+   */
+  String converterConnection();
+  /** Returns the api key for the converter
+   */
+  String converterAPIKey();
   /** Returns the value of {@link CalciteConnectionProperty#SCHEMA_FACTORY},
    * or a default schema factory if not set. If {@code defaultSchemaFactory}
    * is not null, the result is never null. */

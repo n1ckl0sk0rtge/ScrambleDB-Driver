@@ -99,7 +99,8 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context)
       throws ScrambledbErrors.RewriteInsertRuleError, SQLException {
 
-    this.client = new ScrambledbRestClient();
+    // connect to converter
+    this.client = new ScrambledbRestClient(context);
 
     LogicalTableModify logicalTableModify =
         (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
@@ -123,14 +124,20 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
     for (int i = 0; i < tuples.size(); i++) {
       // new line in the table
+      // get the "primary key" of the root table. This key will be used to create the pseudonyms
       RexLiteral referenceKey;
       if (indexOfPrimaryKey > -1) {
+        // primary key is defined in root table
         referenceKey = tuples.get(i).get(indexOfPrimaryKey);
       } else {
-        // default: first column equals primnary key
+        // no primary key defined
+        // use default: first column equals primary key
         referenceKey = tuples.get(i).get(0);
       }
-      List<RexLiteral> linker = getLinkers(this.client, referenceKey, tuples.get(i).size(), context);
+      // get the pseudonyms
+      List<RexLiteral> linker =
+          getLinkers(this.client, referenceKey, tuples.get(i).size(), context);
+
       for (int j = 0; j < tuples.get(i).size(); j++) {
         // new value in table (in column)
         RelDataTypeField currentValueRelDataType = logicalValues.getRowType().getFieldList().get(j);
@@ -279,10 +286,16 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
     return -1;
   }
 
-  private List<RexLiteral> getLinkers(ScrambledbRestClient client, RexLiteral primaryKey, int count, CalcitePrepare.Context context) {
+  private List<RexLiteral> getLinkers(
+      ScrambledbRestClient client,
+      RexLiteral primaryKey,
+      int count,
+      CalcitePrepare.Context context) {
+    // get list of the primary key instance. Remove ' from the string.
     List<String> input = Collections.nCopies(count, primaryKey.toString().replaceAll("[']*", ""));
+    // connect to the converter and get the pseudonyms
     List<String> pseudonyms = client.getPseudonyms(input);
-
+    // replace the primary keys with the pseudonyms and return
     return pseudonyms.stream().map(
         pse -> {
           RexBuilder rexBuilder = new RexBuilder(context.getTypeFactory());
