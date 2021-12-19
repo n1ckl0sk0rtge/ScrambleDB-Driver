@@ -28,7 +28,6 @@ import org.apache.calcite.prepare.Prepare;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.logical.LogicalTableModify;
-import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelProtoDataType;
@@ -45,7 +44,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class ScrambledbInMemoryTable extends AbstractQueryableTable implements TranslatableTable, ScannableTable, ModifiableTable {
+public class ScrambledbInMemoryTable
+    extends AbstractQueryableTable implements ScannableTable, ModifiableTable {
+
   private final String tableName;
   private List<@Nullable Object[]> list = new ArrayList<Object[]>();
   private final RelProtoDataType protoRowType;
@@ -90,23 +91,13 @@ public class ScrambledbInMemoryTable extends AbstractQueryableTable implements T
     return Object[].class;
   }
 
-  @Override public Expression getExpression(@NonNull SchemaPlus schema, @NonNull String tableName,
-      @NonNull Class clazz) {
-    return Schemas.tableExpression(schema, getElementType(),
-        tableName, clazz);
+  @Override
+  public Expression getExpression(SchemaPlus schema, String tableName, Class clazz) {
+    return Schemas.tableExpression(schema, elementType, tableName, Queryable.class);
   }
 
   @Override public RelDataType getRowType(@NonNull RelDataTypeFactory typeFactory) {
     return protoRowType.apply(typeFactory);
-  }
-
-  @Override
-  public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable relOptTable) {
-    return new LogicalTableScan(
-        context.getCluster(),
-        context.getCluster().traitSet(),
-        context.getTableHints(),
-        relOptTable);
   }
 
   @Override
@@ -123,5 +114,4 @@ public class ScrambledbInMemoryTable extends AbstractQueryableTable implements T
   public Enumerable<@Nullable Object[]> scan(DataContext root) {
     return Linq4j.asEnumerable(this.list);
   }
-
 }

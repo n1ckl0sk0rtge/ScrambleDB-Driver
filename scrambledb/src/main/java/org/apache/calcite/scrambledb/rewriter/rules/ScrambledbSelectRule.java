@@ -16,6 +16,7 @@
  */
 package org.apache.calcite.scrambledb.rewriter.rules;
 
+import org.apache.calcite.adapter.enumerable.EnumerableTableScan;
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.adapter.jdbc.JdbcTableScan;
@@ -27,6 +28,7 @@ import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalTableScan;
@@ -151,15 +153,14 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       // increment counter with 2
       counter += 2;
     }
-
-    // convert those tables to in memory tables with pseudonyms converted to identities
-    Stack<LogicalTableScan> inMemoryTableScans =
-        getConvertedTables(context, schema.plus(), defaultJdbcTableScan, subTables);
     // create the join over the scrambled tables
     final FrameworkConfig config = Frameworks.newConfigBuilder()
         .defaultSchema(schema.plus())
         .build();
     RelBuilder builder = RelBuilder.create(config);
+    // convert those tables to in memory tables with pseudonyms converted to identities
+    Stack<TableScan> inMemoryTableScans =
+        getConvertedTables(context, builder, schema.plus(), defaultJdbcTableScan, subTables);
     // start with the first right join element
     RelNode rightJoinElement = inMemoryTableScans.pop();
     // join all subtables together -> creating the relational expr for that
@@ -220,7 +221,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
   }
 
   private RelNode join(
-      Stack<LogicalTableScan> left,
+      Stack<TableScan> left,
       RelNode right,
       RelBuilder builder) {
     if (left.empty()) {
@@ -237,15 +238,16 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     }
   }
 
-  private Stack<LogicalTableScan> getConvertedTables(
+  private Stack<TableScan> getConvertedTables(
       CalcitePrepare.Context context,
+      RelBuilder builder,
       SchemaPlus schemaPlus,
       JdbcTableScan defaultJdbcTableScan,
       Stack<JdbcTable> tables) {
     // adhoc value
     String adhoc = defaultJdbcTableScan.getTable().getQualifiedName().get(0);
 
-    Stack<LogicalTableScan> inMemoryTableScan = new Stack<>();
+    Stack<TableScan> inMemoryTableScan = new Stack<>();
 
     List<List<String>> pseudonyms = new ArrayList<>();
     List<List<Object[]>> data = new ArrayList<>();
@@ -273,11 +275,10 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     for (int i=0; i < tables.size(); i++) {
 
       String subTableName = tables.get(i).jdbcTableName;
-      JdbcTable subTable = tables.get(i);
 
-      int newIdentityCounter = identityCounter + pseudonyms.get(0).size();
-      Object[] tableRelatedIdentities = identities.stream().skip(identityCounter).limit(newIdentityCounter).toArray();
-      identityCounter = newIdentityCounter;
+      int numberOfIdentitiesForThisTable = pseudonyms.get(i).size();
+      Object[] tableRelatedIdentities = identities.stream().skip(identityCounter).limit(numberOfIdentitiesForThisTable).toArray();
+      identityCounter += numberOfIdentitiesForThisTable;
 
       // replace every pseudonym in the table data with the new identity
       List<Object[]> newTableData = new ArrayList<>();
@@ -297,7 +298,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
           .addAll(tables.get(i).getRowType(context.getTypeFactory())
               .getFieldList());
 
-      Table inMemoryTable = new ScrambledbInMemoryTable(
+      ScrambledbInMemoryTable inMemoryTable = new ScrambledbInMemoryTable(
               tables.get(i).jdbcTableName,
               RelDataTypeImpl.proto(relDataTypeBuilder.build()),
               newTableData);
@@ -314,16 +315,14 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
               // T_<column>
               subTableName),
           inMemoryTable,
-          subTable.getExpression(
+          inMemoryTable.getExpression(
               schemaPlus,
               subTableName,
               AbstractQueryableTable.class)
       );
 
-      inMemoryTableScan.add( new LogicalTableScan(
+      inMemoryTableScan.add(EnumerableTableScan.create(
           defaultJdbcTableScan.getCluster(),
-          defaultJdbcTableScan.getTraitSet().replace(ConventionTraitDef.INSTANCE.getDefault()),
-          defaultJdbcTableScan.getHints(),
           newTableDefinition
       ));
     }
