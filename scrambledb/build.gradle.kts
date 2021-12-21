@@ -31,7 +31,7 @@ repositories {
 dependencies {
     api(project(":core"))
     api(project(":linq4j"))
-    api("org.apache.calcite.avatica:avatica-core:1.18.0")
+    api("org.apache.calcite.avatica:avatica-core:1.20.0")
     implementation("org.jboss.resteasy:resteasy-client:5.0.1.Final")
     implementation("org.jboss.resteasy:resteasy-jackson2-provider:5.0.1.Final")
 

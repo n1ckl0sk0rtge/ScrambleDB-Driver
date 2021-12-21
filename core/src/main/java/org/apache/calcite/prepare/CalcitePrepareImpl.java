@@ -106,6 +106,7 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.SqlRewriterFactory;
 import org.apache.calcite.tools.SqlRewriterImpl;
 import org.apache.calcite.tools.SqlRewriterImplFactory;
 import org.apache.calcite.util.ImmutableIntList;
@@ -1023,7 +1024,9 @@ public class CalcitePrepareImpl implements CalcitePrepare {
 
       // SQL Rewriter
       final SqlRewriterImplFactory rewriterFactory =
-          context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+          context.config().rewriterFactory(
+              SqlRewriterImplFactory.class,
+              SqlRewriterFactory.FACTORY);
       SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
       root = rewriter.rewrite(root, context);
 

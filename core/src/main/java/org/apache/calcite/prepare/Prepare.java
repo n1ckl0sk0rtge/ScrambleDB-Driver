@@ -61,6 +61,7 @@ import org.apache.calcite.sql2rel.InitializerExpressionFactory;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.Program;
 import org.apache.calcite.tools.Programs;
+import org.apache.calcite.tools.SqlRewriterFactory;
 import org.apache.calcite.tools.SqlRewriterImpl;
 import org.apache.calcite.tools.SqlRewriterImplFactory;
 import org.apache.calcite.util.Holder;
@@ -287,7 +288,7 @@ public abstract class Prepare {
 
     // SQL Rewriter
     final SqlRewriterImplFactory rewriterFactory =
-        context.config().rewriterFactory(SqlRewriterImplFactory.class, null);
+        context.config().rewriterFactory(SqlRewriterImplFactory.class, SqlRewriterFactory.FACTORY);
     SqlRewriterImpl rewriter = rewriterFactory.getRewriter();
     root = rewriter.rewrite(root, context);
 

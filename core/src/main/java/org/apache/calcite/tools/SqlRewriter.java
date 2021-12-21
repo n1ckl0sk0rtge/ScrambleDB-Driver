@@ -22,7 +22,7 @@ import org.apache.calcite.rel.RelRoot;
 /**
  * Default SQL rewriter.
  */
-public class SqlRewriter implements SqlRewriterImpl{
+public class SqlRewriter implements SqlRewriterImpl {
 
   protected SqlRewriter() { }
 

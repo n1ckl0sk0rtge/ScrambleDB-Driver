@@ -26,7 +26,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public interface CreateTable {
 
-  void createTable(String name, ImmutableList<TableColumn> columns, @Nullable SqlKeyConstraint keyConstraint);
+  void createTable(
+      String name,
+      ImmutableList<TableColumn> columns,
+      @Nullable SqlKeyConstraint keyConstraint);
 
   void reloadTablesIntoSchema();
 

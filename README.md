@@ -1,30 +1,13 @@
-<!--
-{% comment %}
-Licensed to the Apache Software Foundation (ASF) under one or more
-contributor license agreements.  See the NOTICE file distributed with
-this work for additional information regarding copyright ownership.
-The ASF licenses this file to you under the Apache License, Version 2.0
-(the "License"); you may not use this file except in compliance with
-the License.  You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+# ScrambleDB Database Driver
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-{% endcomment %}
--->
+This repository contains a JDBC driver for connection to a database
+and access data in a scrambleDB fashion.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.apache.calcite/calcite-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.apache.calcite/calcite-core)
-[![Travis Build Status](https://app.travis-ci.com/apache/calcite.svg?branch=master)](https://app.travis-ci.com/github/apache/calcite)
-[![CI Status](https://github.com/apache/calcite/workflows/CI/badge.svg?branch=master)](https://github.com/apache/calcite/actions?query=branch%3Amaster)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/apache/calcite?svg=true&branch=master)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/calcite)
+## Foundation: Apache Calcite
 
-# Apache Calcite
-
-Apache Calcite is a dynamic data management framework.
+ScrambleDB is build on top of apache calcite, which
+is a dynamic data management framework.
 
 It contains many of the pieces that comprise a typical
 database management system but omits the storage primitives.
@@ -37,3 +20,15 @@ Elasticsearch, MongoDB, Kafka, and others, with minimal
 configuration.
 
 For more details, see the [home page](http://calcite.apache.org).
+
+## ScrambleDB JDBC Driver
+
+ScrambleDB in general is a central and oblivious pseudonymization
+service, which is used to desensitize data from distributed sources.
+At the same time, ScrambleDB overcomes the privacy limitations
+that are inherent whenever globally consistent pseudonyms
+are used in order to preserve the utility of the data.
+
+The JDBC driver is on part of the ScrambleBD setup. It will be used to grep
+data form database and interact with the
+[converter](https://github.com/n1ckl0sk0rtge/converter) to join data.

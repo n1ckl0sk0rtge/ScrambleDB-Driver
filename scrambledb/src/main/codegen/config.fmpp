@@ -64,6 +64,7 @@ data: {
       "JAR"
       "FILE"
       "ARCHIVE"
+      "TABLES"
     ]
 
     # List of non-reserved keywords to add;
@@ -77,13 +78,14 @@ data: {
       "JAR"
       "FILE"
       "ARCHIVE"
+      "TABLES"
     ]
 
     # List of methods for parsing extensions to "CREATE [OR REPLACE]" calls.
     # Each must accept arguments "(SqlParserPos pos, boolean replace)".
     # Example: "SqlCreateForeignSchema".
     createStatementParserMethods: [
-      "SqlCreateScrambledTable"
+      "SqlCreateTable"
     ]
 
     # List of methods for parsing extensions to "DROP" calls.
