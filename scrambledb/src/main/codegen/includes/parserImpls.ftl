@@ -226,7 +226,7 @@ SqlCreate SqlCreateType(Span s, boolean replace) :
     }
 }
 
-SqlCreate SqlCreateScrambledTable(Span s, boolean replace) :
+SqlCreate SqlCreateTable(Span s, boolean replace) :
 {
     final boolean ifNotExists;
     final SqlIdentifier id;
@@ -250,5 +250,15 @@ SqlDrop SqlDropTable(Span s, boolean replace) :
 {
     <TABLE> ifExists = IfExistsOpt() id = CompoundIdentifier() {
         return SqlStatementsNodes.dropTable(s.end(this), ifExists, id);
+    }
+}
+
+SqlNode SqlShowTables(Span s, boolean replace) :
+{
+
+}
+{
+    <SHOW> <TABLES> {
+        return SqlStatementsNodes.showTables(s.end(this));
     }
 }

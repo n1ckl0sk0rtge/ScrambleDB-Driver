@@ -16,33 +16,43 @@
  */
 package org.apache.calcite.scrambledb.parser;
 
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.ddl.SqlDropTable;
+import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
+import org.apache.calcite.util.Litmus;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Utilities concerning {@link org.apache.calcite.sql.SqlNode} for ScrambleDB.
+ * Parse tree for {@code SHOW TABLES} statement.
  */
-public class SqlStatementsNodes {
+public class SqlShowTables extends SqlNode {
 
-  private SqlStatementsNodes() {  }
-
-  /** Creates a CREATE TABLE. */
-  public static SqlCreateTable createTable(SqlParserPos pos, boolean replace,
-      boolean ifNotExists, SqlIdentifier name, SqlNodeList columnList) {
-    return new SqlCreateTable(pos, replace, ifNotExists, name, columnList);
+  SqlShowTables(SqlParserPos pos) {
+    super(pos);
   }
 
-  /** Creates a DROP TABLE. */
-  public static SqlDropTable dropTable(SqlParserPos pos, boolean ifExists,
-      SqlIdentifier name) {
-    return new SqlDropTable(pos, ifExists, name);
+  @Override public SqlNode clone(SqlParserPos pos) {
+    return null;
   }
 
-  public static SqlNode showTables(SqlParserPos pos) {
-    return new SqlShowTables(pos);
+  @Override public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+    writer.keyword("SHOW");
+    writer.keyword("TABLES");
   }
 
+  @Override public void validate(SqlValidator validator, SqlValidatorScope scope) {
+    validator.validate(this);
+  }
+
+  @Override public <R> R accept(SqlVisitor<R> visitor) {
+    return null;
+  }
+
+  @Override public boolean equalsDeep(@Nullable SqlNode node, Litmus litmus) {
+    return false;
+  }
 }

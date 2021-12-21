@@ -539,7 +539,10 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
     }
   }
 
-  @Override public void createTable(String name, ImmutableList<TableColumn> columns, @Nullable SqlKeyConstraint keyConstraint) {
+  @Override public void createTable(
+      String name,
+      ImmutableList<TableColumn> columns,
+      @Nullable SqlKeyConstraint keyConstraint) {
 
     try {
       Connection connection = dataSource.getConnection();
@@ -568,8 +571,8 @@ public class JdbcSchema implements Schema, CreateTable, DropTable {
 
       String keyConstraintOperator = "";
       if (keyConstraint != null) {
-         keyConstraintOperator = " ,"
-             + keyConstraint.toString().replaceAll("[`]*", "") + " ";
+        keyConstraintOperator = " ,"
+            + keyConstraint.toString().replaceAll("[`]*", "") + " ";
       }
 
       String sql = sqlFunction + " " + name + " (" + col + keyConstraintOperator + " );";

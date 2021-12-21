@@ -16,7 +16,6 @@
  */
 package org.apache.calcite.scrambledb.rest;
 
-import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.scrambledb.rest.model.ConversionRequest;
 import org.apache.calcite.scrambledb.rest.model.GenerationRequest;
