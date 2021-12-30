@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,15 +30,6 @@ import static org.hamcrest.core.Is.is;
  *
  */
 public class ScrambledbTest {
-
-  public void showTables() throws SQLException, ClassNotFoundException {
-    Connection connection = ScrambledbTestUtil.getConnection();
-    Statement statement = connection.createStatement();
-
-    try (ResultSet r = statement.executeQuery("SHOW TABLES")) {
-      String result = ScrambledbTestUtil.resultToString(r);
-    }
-  }
 
   @Test public void testCreateScrambledTable() throws Exception {
     Connection connection = ScrambledbTestUtil.getConnection();

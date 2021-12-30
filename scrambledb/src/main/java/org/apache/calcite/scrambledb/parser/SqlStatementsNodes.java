@@ -17,7 +17,6 @@
 package org.apache.calcite.scrambledb.parser;
 
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.ddl.SqlDropTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -39,10 +38,6 @@ public class SqlStatementsNodes {
   public static SqlDropTable dropTable(SqlParserPos pos, boolean ifExists,
       SqlIdentifier name) {
     return new SqlDropTable(pos, ifExists, name);
-  }
-
-  public static SqlNode showTables(SqlParserPos pos) {
-    return new SqlShowTables(pos);
   }
 
 }

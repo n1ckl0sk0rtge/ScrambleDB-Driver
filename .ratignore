@@ -2,6 +2,7 @@
 **/.editorconfig
 **/.gitignore
 **/.gitattributes
+**/README.md
 .github/workflows
 .ratignore
 **/META-INF/services/java.sql.Driver

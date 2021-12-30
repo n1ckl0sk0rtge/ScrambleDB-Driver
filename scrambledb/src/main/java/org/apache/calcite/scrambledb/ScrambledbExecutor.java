@@ -20,7 +20,6 @@ import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.schema.TableColumn;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
-import org.apache.calcite.scrambledb.parser.SqlShowTables;
 import org.apache.calcite.scrambledb.tasks.CreateTableExecutor;
 import org.apache.calcite.scrambledb.tasks.DropTableExecutor;
 import org.apache.calcite.server.DdlExecutor;
@@ -128,12 +127,6 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
      */
     exec.execute();
 
-  }
-
-  public void execute(SqlShowTables showTables,
-      CalcitePrepare.Context context) {
-
-    context.getRootSchema().getTableNames();
   }
 
 }

@@ -64,7 +64,6 @@ data: {
       "JAR"
       "FILE"
       "ARCHIVE"
-      "TABLES"
     ]
 
     # List of non-reserved keywords to add;
@@ -78,7 +77,12 @@ data: {
       "JAR"
       "FILE"
       "ARCHIVE"
-      "TABLES"
+    ]
+
+    # List of methods for parsing custom SQL statements.
+    # Return type of method implementation should be 'SqlNode'.
+    # Example: "SqlShowDatabases()", "SqlShowTables()".
+    statementParserMethods: [
     ]
 
     # List of methods for parsing extensions to "CREATE [OR REPLACE]" calls.

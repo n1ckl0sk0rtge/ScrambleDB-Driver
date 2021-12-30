@@ -252,13 +252,3 @@ SqlDrop SqlDropTable(Span s, boolean replace) :
         return SqlStatementsNodes.dropTable(s.end(this), ifExists, id);
     }
 }
-
-SqlNode SqlShowTables(Span s, boolean replace) :
-{
-
-}
-{
-    <SHOW> <TABLES> {
-        return SqlStatementsNodes.showTables(s.end(this));
-    }
-}
