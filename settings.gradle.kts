@@ -55,14 +55,13 @@ plugins {
 
 // This is the name of a current project
 // Note: it cannot be inferred from the directory name as developer might clone Calcite to calcite_tmp folder
-rootProject.name = "calcite"
+rootProject.name = "scrambleDBdriver"
 
 include(
     "bom",
     "release",
     "core",
-    "linq4j",
-    "server"
+    "linq4j"
 )
 
 // See https://github.com/gradle/gradle/issues/1348#issuecomment-284758705 and

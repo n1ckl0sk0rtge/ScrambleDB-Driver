@@ -37,7 +37,7 @@ public class ScrambledbTest {
 
     boolean b = statement.execute(
         "create table customer (name varchar(20), age int default 0)");
-    //boolean b = statement.execute(
+    // boolean b = statement.execute(
     //    "create table customer (name varchar(20), age int default 0, primary key (name))");
     assertThat(b, is(false));
 

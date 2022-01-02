@@ -14,30 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.rest.model;
+
+package org.apache.calcite.scrambledb.converterConnection;
 
 import java.util.List;
 
-/**
- * Pattern for generation request.
- */
-public class GenerationRequest {
+public interface ConverterConnection {
 
-  private String authToken;
-  private List<String> input;
-
-  GenerationRequest() {}
-
-  public GenerationRequest(String authToken, List<String> input) {
-    this.authToken = authToken;
-    this.input = input;
+  enum Type {
+    REST,
+    KAFKA
   }
 
-  public String getAuthToken() {
-    return authToken;
-  }
+  public Type getType();
 
-  public List<String> getInput() {
-    return input;
-  }
+  public List<String> getPseudonyms(List<String> input);
+
+  public List<String> convert(List<String> pseudonyms);
+
 }

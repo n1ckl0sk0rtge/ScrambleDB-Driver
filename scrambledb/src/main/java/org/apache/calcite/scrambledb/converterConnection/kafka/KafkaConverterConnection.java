@@ -14,35 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.rest;
 
-import org.apache.calcite.scrambledb.rest.model.ConversionRequest;
-import org.apache.calcite.scrambledb.rest.model.GenerationRequest;
+package org.apache.calcite.scrambledb.converterConnection.kafka;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import org.apache.calcite.jdbc.CalcitePrepare;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
 
-/**
- * Service Interface for all available Rest functions/calls.
- */
-@Path("/api")
-public interface RestServicesInterface {
+import java.util.List;
 
-  @POST
-  @Path("/pseudonym")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  Response pseudonyms(GenerationRequest request);
+public class KafkaConverterConnection implements ConverterConnection {
 
-  @POST
-  @Path("/convert")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  Response convert(ConversionRequest request);
+  public KafkaConverterConnection(CalcitePrepare.Context context) {
 
+  }
+
+  @Override
+  public Type getType() {
+    return Type.KAFKA;
+  }
+
+  @Override
+  public List<String> getPseudonyms(List<String> input) {
+    return null;
+  }
+
+  @Override
+  public List<String> convert(List<String> pseudonyms) {
+    return null;
+  }
 
 }

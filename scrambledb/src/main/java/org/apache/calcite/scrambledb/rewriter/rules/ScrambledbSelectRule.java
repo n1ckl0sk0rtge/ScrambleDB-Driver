@@ -41,7 +41,9 @@ import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbInMemoryTable;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
-import org.apache.calcite.scrambledb.rest.ScrambledbRestClient;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnectionFactory;
+import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
@@ -63,8 +65,6 @@ import java.util.stream.Collectors;
  */
 public class ScrambledbSelectRule implements SqlRewriterRule  {
 
-  private ScrambledbRestClient client;
-
   /**
    * Explanation.
    *
@@ -82,8 +82,6 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
    */
   @Override public RelNode apply(RelNode node, CalcitePrepare.Context context) {
 
-    this.client = new ScrambledbRestClient(context);
-
     CalciteSchema schema = ScrambledbUtil.schema(context, true);
     // if Calcite is connected to a data source a schema should exist.
     // if not, an error would raise lines before.
@@ -98,15 +96,11 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     }
     // replace each default JdbcTableScan with a node for scanning the scrambled tables
     try {
-      // close rest client connection
-      this.client.close();
       // return updated query
       return replaceJdbcTableScanWithScrambledbTableScan(node, replacements, new Stack<>());
     } catch (Exception e) {
       e.printStackTrace();
     }
-    // close rest client connection
-    this.client.close();
     // return unchanged node as default
     return node;
   }
@@ -141,7 +135,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       String columnName = field.getName();
       // generating the subtable name by using the global config
       String subTableName =
-          ScrambledbExecutor.config.createSubtableString(tableName, columnName);
+          ScrambledbExecutor.config.createSubTableString(tableName, columnName);
       // get subtable in schema
       JdbcTable subTable = (JdbcTable) schema.schema.getTable(subTableName);
       // this table should exist, because it was self created by create table
@@ -272,6 +266,8 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       );
       data.add(new ArrayList<>(tableData.values()));
     }
+    // get connection to the converter
+    ConverterConnection client = ConverterConnectionFactory.getConverterConnection(context);
     // convert pseudonyms to identities
     List<String> identities = client.convert(
         pseudonyms.stream()

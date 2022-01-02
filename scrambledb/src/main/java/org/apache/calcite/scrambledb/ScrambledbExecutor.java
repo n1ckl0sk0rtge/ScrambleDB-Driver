@@ -93,7 +93,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
       for (TableColumn column : exec.columns) {
         exec.executeWith(
-            ScrambledbExecutor.config.createSubtableString(
+            ScrambledbExecutor.config.createSubTableString(
                 exec.getName(),
                 column.getName()),
             ImmutableList.<TableColumn>builder()
@@ -118,7 +118,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
     for (String name : rootTableColumnNames) {
       exec.executeWith(
-          ScrambledbExecutor.config.createSubtableString(
+          ScrambledbExecutor.config.createSubTableString(
           exec.getName(),
           name));
     }

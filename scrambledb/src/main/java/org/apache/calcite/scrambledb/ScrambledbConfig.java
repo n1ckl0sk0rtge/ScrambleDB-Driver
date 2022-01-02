@@ -21,6 +21,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.ColumnStrategy;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -34,9 +35,11 @@ public class ScrambledbConfig {
   private final String defaultValue = "Null";
   private final Integer size = 500;
   private final SqlTypeName type = SqlTypeName.VARCHAR;
-  private final RelDataType linkerRelDataType;
   private final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
   private final String subTableConnector = "_";
+  private final ConverterConnection.Type connectionType = ConverterConnection.Type.REST;
+
+  private final RelDataType linkerRelDataType;
 
   ScrambledbConfig() {
     final RelDataTypeFactory typeFactory =
@@ -50,8 +53,12 @@ public class ScrambledbConfig {
     this.linkerRelDataType = relDataBuilder.build();
   }
 
-  public String createSubtableString(String rootTableName, String columName) {
+  public String createSubTableString(String rootTableName, String columName) {
     return rootTableName + subTableConnector + columName;
+  }
+
+  public ConverterConnection.Type getConnectionType() {
+    return connectionType;
   }
 
   public Integer getSize() {

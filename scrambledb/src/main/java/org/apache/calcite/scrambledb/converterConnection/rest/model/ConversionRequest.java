@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.rest.model;
+package org.apache.calcite.scrambledb.converterConnection.rest.model;
 
 import java.util.List;
 

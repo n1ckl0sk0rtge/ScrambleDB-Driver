@@ -36,7 +36,9 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
-import org.apache.calcite.scrambledb.rest.ScrambledbRestClient;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnectionFactory;
+import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.SqlRewriterRule;
@@ -58,7 +60,7 @@ import java.util.stream.Collectors;
  */
 public class ScrambledbInsertRule implements SqlRewriterRule {
 
-  private ScrambledbRestClient client;
+  private ConverterConnection client;
 
   /**
    * Explanation.
@@ -100,7 +102,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
       throws ScrambledbErrors.RewriteInsertRuleError, SQLException {
 
     // connect to converter
-    this.client = new ScrambledbRestClient(context);
+    this.client = ConverterConnectionFactory.getConverterConnection(context);
 
     LogicalTableModify logicalTableModify =
         (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
@@ -215,7 +217,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
         String columnName = newLogicalValues.getRowType().getFieldNames().get(1);
         String subTableName = ScrambledbExecutor
-            .config.createSubtableString(rootTableName, columnName);
+            .config.createSubTableString(rootTableName, columnName);
 
         Table table = schema.schema.getTable(subTableName);
         // this table should exist, because it was self created by create table
@@ -255,9 +257,6 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
       }
     }
-    // close rest client
-    this.client.close();
-
     return newNode;
   }
 
@@ -287,7 +286,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
   }
 
   private List<RexLiteral> getLinkers(
-      ScrambledbRestClient client,
+      ConverterConnection client,
       RexLiteral primaryKey,
       int count,
       CalcitePrepare.Context context) {
