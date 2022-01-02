@@ -37,13 +37,8 @@ import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.scrambledb.ScrambledbErrors;
-import org.apache.calcite.scrambledb.ScrambledbExecutor;
-import org.apache.calcite.scrambledb.ScrambledbInMemoryTable;
-import org.apache.calcite.scrambledb.ScrambledbUtil;
+import org.apache.calcite.scrambledb.*;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnectionFactory;
-import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
@@ -135,7 +130,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       String columnName = field.getName();
       // generating the subtable name by using the global config
       String subTableName =
-          ScrambledbExecutor.config.createSubTableString(tableName, columnName);
+          ScrambledbConfig.INSTANCE.createSubTableString(tableName, columnName);
       // get subtable in schema
       JdbcTable subTable = (JdbcTable) schema.schema.getTable(subTableName);
       // this table should exist, because it was self created by create table
@@ -232,7 +227,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
           .push(left.pop())
           .push(right)
           .join(JoinRelType.FULL,
-              ScrambledbExecutor.config.getLinkerName());
+              ScrambledbConfig.INSTANCE.getLinkerName());
       RelNode newRight = builder.build();
       builder.clear();
       return join(left, newRight, builder);
@@ -267,7 +262,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
       data.add(new ArrayList<>(tableData.values()));
     }
     // get connection to the converter
-    ConverterConnection client = ConverterConnectionFactory.getConverterConnection(context);
+    ConverterConnection client = ScrambledbConfig.INSTANCE.getConverterConnection(context);
     // convert pseudonyms to identities
     List<String> identities = client.convert(
         pseudonyms.stream()

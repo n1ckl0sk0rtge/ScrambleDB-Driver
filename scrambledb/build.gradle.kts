@@ -32,8 +32,11 @@ dependencies {
     api(project(":core"))
     api(project(":linq4j"))
     api("org.apache.calcite.avatica:avatica-core:1.20.0")
+
     implementation("org.jboss.resteasy:resteasy-client:5.0.1.Final")
     implementation("org.jboss.resteasy:resteasy-jackson2-provider:5.0.1.Final")
+
+    implementation("org.apache.kafka:kafka-clients:3.0.0")
 
     runtimeOnly("mysql:mysql-connector-java:8.0.26")
 

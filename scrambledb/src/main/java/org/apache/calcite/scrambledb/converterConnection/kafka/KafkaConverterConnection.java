@@ -14,33 +14,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.scrambledb.converterConnection.kafka;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
 
-import java.util.List;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class KafkaConverterConnection implements ConverterConnection {
 
-  public KafkaConverterConnection(CalcitePrepare.Context context) {
+  private final String kafkaTopic;
+  private final String kafkaBootstrapServers;
+  private final UUID identifier;
 
+  private final static String MESSAGE_KEY_SEPARATOR = "_";
+  private final static Duration KAFKA_RESPONSE_TIMEOUT = Duration.ofSeconds(5);
+
+  public KafkaConverterConnection(CalcitePrepare.Context context, UUID identifier) {
+    this.kafkaBootstrapServers = "192.168.64.3:9093";
+    // identifier for kafka messaging
+    this.identifier = identifier;
+    System.out.println(identifier);
+    // the kafka topic to produce and subscribe
+    this.kafkaTopic = "scrambleDBconversion";
   }
 
-  @Override
-  public Type getType() {
+  @Override public Type getType() {
     return Type.KAFKA;
   }
 
-  @Override
-  public List<String> getPseudonyms(List<String> input) {
-    return null;
+  @Override public List<String> getPseudonyms(List<String> input) {
+    return interaction(input,"pseudonym");
   }
 
-  @Override
-  public List<String> convert(List<String> pseudonyms) {
-    return null;
+  @Override public List<String> convert(List<String> pseudonyms) {
+    return interaction(pseudonyms, "convert");
+  }
+
+
+  public List<String> interaction(List<String> payload, String taskIdentifier) {
+    final KafkaConsumer<String,String> consumer = getConsumer();
+
+    final List<String> result = new ArrayList<String>();
+    final CountDownLatch latch = new CountDownLatch(1);
+    Thread consumerThread = new Thread(() -> {
+      consumer.subscribe(Collections.singletonList(this.kafkaTopic));
+
+      while (result.size() < payload.size()){
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
+        for (ConsumerRecord<String, String> record : records) {
+          if (record.key().contains(this.identifier.toString())) {
+            result.add(record.value());
+          }
+        }
+      }
+      latch.countDown(); // Release await() in the test thread.
+      consumer.close();
+    });
+
+    consumerThread.start();
+
+    final KafkaProducer<String,String> producer = getProducer();
+    final String key = this.identifier + MESSAGE_KEY_SEPARATOR + taskIdentifier;
+
+    for (String element : payload) {
+      ProducerRecord<String, String> record = new ProducerRecord<>(this.kafkaTopic, key, element);
+      producer.send(record);
+    }
+    producer.close();
+
+    try {
+      if (latch.await(KAFKA_RESPONSE_TIMEOUT.get(ChronoUnit.SECONDS), TimeUnit.SECONDS)) {
+        return result;
+      } else {
+        throw new Exception("[Error] could not get response from converter. Session timeout.");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new ArrayList<>();
+    }
+
+  }
+
+  private KafkaProducer<String, String> getProducer() {
+    // Kafka config
+    Properties properties = new Properties();
+    properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBootstrapServers);
+    properties.setProperty(
+        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    properties.setProperty(
+        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    properties.setProperty(
+        ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+    properties.setProperty(ProducerConfig.ACKS_CONFIG, "all");
+    properties.setProperty(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+    properties.setProperty(ProducerConfig.RETRIES_CONFIG, "2147483647");
+
+    return new KafkaProducer<String, String>(properties);
+  }
+
+  private KafkaConsumer<String, String> getConsumer() {
+    // Kafka config
+    Properties properties = new Properties();
+    properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaBootstrapServers);
+    properties.setProperty(
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    properties.setProperty(
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+    properties.setProperty(
+        ConsumerConfig.GROUP_ID_CONFIG, this.identifier.toString());
+    properties.setProperty(
+        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+
+    return new KafkaConsumer<String, String>(properties);
   }
 
 }

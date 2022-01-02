@@ -16,41 +16,62 @@
  */
 package org.apache.calcite.scrambledb;
 
+import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterConnection;
+import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
+import java.util.UUID;
+
 /**
  * Config for scrambleDB.
  */
 public class ScrambledbConfig {
 
-  private final String linkerName = "linkerID";
-  private final String defaultValue = "Null";
-  private final Integer size = 500;
-  private final SqlTypeName type = SqlTypeName.VARCHAR;
-  private final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
-  private final String subTableConnector = "_";
-  private final ConverterConnection.Type connectionType = ConverterConnection.Type.REST;
+  public static final ScrambledbConfig INSTANCE = new ScrambledbConfig();
 
+  private static final String linkerName = "linkerID";
+  private static final String defaultValue = "Null";
+  private static final Integer size = 500;
+  private static final SqlTypeName type = SqlTypeName.VARCHAR;
+  private static final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
+  private static final String subTableConnector = "_";
+  private static final ConverterConnection.Type connectionType =
+      ConverterConnection.Type.REST;
+
+  private final UUID kafka_identifier = UUID.randomUUID();
   private final RelDataType linkerRelDataType;
 
-  ScrambledbConfig() {
+  private ScrambledbConfig() {
     final RelDataTypeFactory typeFactory =
         new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
 
     RelDataTypeFactory.Builder relDataBuilder =
         new RelDataTypeFactory.Builder(typeFactory);
     relDataBuilder
-        .add(linkerName, this.type, this.size).nullable(true);
+        .add(linkerName, type, size).nullable(true);
 
     this.linkerRelDataType = relDataBuilder.build();
+  }
+
+  public ConverterConnection getConverterConnection(CalcitePrepare.Context context) {
+    switch (this.getConnectionType()) {
+    case REST:
+      return new RestConverterConnection(context);
+    case KAFKA:
+      return new KafkaConverterConnection(context, this.kafka_identifier);
+    default:
+      System.out.println("[Error] could not find connection type for converter. Switched to default: REST");
+      return new RestConverterConnection(context);
+    }
   }
 
   public String createSubTableString(String rootTableName, String columName) {

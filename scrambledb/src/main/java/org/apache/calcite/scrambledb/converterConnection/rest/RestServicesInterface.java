@@ -16,8 +16,8 @@
  */
 package org.apache.calcite.scrambledb.converterConnection.rest;
 
-import org.apache.calcite.scrambledb.converterConnection.rest.model.GenerationRequest;
 import org.apache.calcite.scrambledb.converterConnection.rest.model.ConversionRequest;
+import org.apache.calcite.scrambledb.converterConnection.rest.model.GenerationRequest;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;

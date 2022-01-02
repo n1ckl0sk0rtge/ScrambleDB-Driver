@@ -33,12 +33,10 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.scrambledb.ScrambledbConfig;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
-import org.apache.calcite.scrambledb.ScrambledbExecutor;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnectionFactory;
-import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.SqlRewriterRule;
@@ -102,7 +100,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
       throws ScrambledbErrors.RewriteInsertRuleError, SQLException {
 
     // connect to converter
-    this.client = ConverterConnectionFactory.getConverterConnection(context);
+    this.client = ScrambledbConfig.INSTANCE.getConverterConnection(context);
 
     LogicalTableModify logicalTableModify =
         (LogicalTableModify) ScrambledbUtil.contains(node, LogicalTableModify.class);
@@ -148,7 +146,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
             new RelDataTypeFactory.Builder(context.getTypeFactory());
         relDataTypeBuilder
             // add linker type from config
-            .addAll(ScrambledbExecutor.config.getLinkerRelDataTypeField())
+            .addAll(ScrambledbConfig.INSTANCE.getLinkerRelDataTypeField())
             // add value type from given logical value
             .add(currentValueRelDataType);
         // define values
@@ -170,7 +168,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
 
           // define Reference Node
           RexNode linkerReference = new RexInputRef(0,
-              ScrambledbExecutor.config.getLinkerRelDataType());
+              ScrambledbConfig.INSTANCE.getLinkerRelDataType());
           // increment value reference by 1
           RexNode valueReference = incrementReferences(projects.get(j));
           if (valueReference == null) {
@@ -192,7 +190,7 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         } else {
           // define Reference Node
           RexNode linkerReference = new RexInputRef(0,
-              ScrambledbExecutor.config.getLinkerRelDataType());
+              ScrambledbConfig.INSTANCE.getLinkerRelDataType());
 
           RexNode valueReference = new RexInputRef(1,
               currentValueRelDataType.getType());
@@ -216,8 +214,8 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         assert schema != null;
 
         String columnName = newLogicalValues.getRowType().getFieldNames().get(1);
-        String subTableName = ScrambledbExecutor
-            .config.createSubTableString(rootTableName, columnName);
+        String subTableName =
+            ScrambledbConfig.INSTANCE.createSubTableString(rootTableName, columnName);
 
         Table table = schema.schema.getTable(subTableName);
         // this table should exist, because it was self created by create table

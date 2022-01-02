@@ -16,6 +16,8 @@
  */
 package org.apache.calcite.scrambledb.converterConnection.rest;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.rest.model.ConversionRequest;
@@ -44,13 +46,11 @@ public class RestConverterConnection implements ConverterConnection {
     this.context = context;
   }
 
-  @Override
-  public Type getType() {
+  @Override public Type getType() {
     return Type.REST;
   }
 
-  @Override
-  public List<String> getPseudonyms(List<String> input) {
+  @Override public List<String> getPseudonyms(List<String> input) {
     // create rest connection to converter
     Client client = ResteasyClientBuilderImpl.newClient();
     // get connection information from config
@@ -74,8 +74,7 @@ public class RestConverterConnection implements ConverterConnection {
     return res;
   }
 
-  @Override
-  public List<String> convert(List<String> pseudonyms) {
+  @Override public List<String> convert(List<String> pseudonyms) {
     // create rest connection to converter
     Client client = ResteasyClientBuilderImpl.newClient();
     // get connection information from config

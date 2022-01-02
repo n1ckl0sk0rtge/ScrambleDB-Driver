@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb;
+package org.apache.calcite.scrambledb.ddl;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.schema.TableColumn;
+import org.apache.calcite.scrambledb.ScrambledbConfig;
 import org.apache.calcite.scrambledb.parser.SqlCreateTable;
-import org.apache.calcite.scrambledb.tasks.CreateTableExecutor;
-import org.apache.calcite.scrambledb.tasks.DropTableExecutor;
 import org.apache.calcite.server.DdlExecutor;
 import org.apache.calcite.server.DdlExecutorImpl;
 import org.apache.calcite.sql.SqlNumericLiteral;
@@ -43,13 +42,11 @@ import java.util.List;
  * the command to an appropriate {@code execute} method. For example,
  * "CREATE TABLE" ({@link SqlCreateTable}) is dispatched to
  * {@link #execute(SqlCreateTable, CalcitePrepare.Context)}. */
-public class ScrambledbExecutor extends DdlExecutorImpl {
+public class ScrambledbDDLExecutor extends DdlExecutorImpl {
 
-  public static final ScrambledbExecutor INSTANCE = new ScrambledbExecutor();
+  public static final ScrambledbDDLExecutor INSTANCE = new ScrambledbDDLExecutor();
 
-  public static ScrambledbConfig config = new ScrambledbConfig();
-
-  protected ScrambledbExecutor() {  }
+  protected ScrambledbDDLExecutor() {  }
 
   /** Parser factory. */
   public static final SqlParserImplFactory PARSER_FACTORY =
@@ -59,7 +56,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
         }
 
         @Override public DdlExecutor getDdlExecutor() {
-          return ScrambledbExecutor.INSTANCE;
+          return ScrambledbDDLExecutor.INSTANCE;
         }
 
       };
@@ -69,6 +66,8 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
       CalcitePrepare.Context context) {
 
     CreateTableExecutor exec = new CreateTableExecutor(create, context);
+
+    ScrambledbConfig config = ScrambledbConfig.INSTANCE;
 
     /* Create an empty table with the given name
      * and the given columns.
@@ -93,7 +92,7 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
       for (TableColumn column : exec.columns) {
         exec.executeWith(
-            ScrambledbExecutor.config.createSubTableString(
+            config.createSubTableString(
                 exec.getName(),
                 column.getName()),
             ImmutableList.<TableColumn>builder()
@@ -114,11 +113,13 @@ public class ScrambledbExecutor extends DdlExecutorImpl {
 
     DropTableExecutor exec = new DropTableExecutor(drop, context);
 
+    ScrambledbConfig config = ScrambledbConfig.INSTANCE;
+
     List<String> rootTableColumnNames = exec.getRootTableColumnsNames();
 
     for (String name : rootTableColumnNames) {
       exec.executeWith(
-          ScrambledbExecutor.config.createSubTableString(
+          config.createSubTableString(
           exec.getName(),
           name));
     }

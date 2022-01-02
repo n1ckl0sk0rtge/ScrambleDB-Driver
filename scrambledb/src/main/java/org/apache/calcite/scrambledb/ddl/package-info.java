@@ -14,21 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.converterConnection;
 
-import java.util.List;
-
-public interface ConverterConnection {
-
-  enum Type {
-    REST,
-    KAFKA
-  }
-
-  public Type getType();
-
-  public List<String> getPseudonyms(List<String> input);
-
-  public List<String> convert(List<String> pseudonyms);
-
-}
+/**
+ * package info.
+ */
+package org.apache.calcite.scrambledb.ddl;

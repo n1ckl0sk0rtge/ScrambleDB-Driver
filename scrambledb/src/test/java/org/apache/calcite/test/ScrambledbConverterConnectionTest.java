@@ -15,7 +15,24 @@
  * limitations under the License.
  */
 
-/**
- * package info.
- */
-package org.apache.calcite.scrambledb.tasks;
+package org.apache.calcite.test;
+
+import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterConnection;
+
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.UUID;
+
+public class ScrambledbConverterConnectionTest {
+
+  @Test public void kafkaConnection() {
+
+    ConverterConnection connection = new KafkaConverterConnection(null, UUID.randomUUID());
+
+    connection.getPseudonyms(Arrays.asList("test", "test2"));
+
+  }
+
+}
