@@ -134,4 +134,13 @@ The jdbc url contains all configurations needed to get the scrambleDB driver wor
 | `schema.jdbcPassword`              | The password for the user to authenticate to the database.                                                                                                                                                                                                                                                                                                               |
 
 
+## Usage
 
+The scrambleDB can be used as the original mysql driver for DML statements.
+
+Example:
+
+```mysql-sql
+// if the parser for DDL
+CREATE TABLE customer (name VARCHAR(20), age INT DEFAULT 0)
+```
