@@ -140,7 +140,7 @@ The scrambleDB can be used as the original mysql driver for DML statements.
 
 Example:
 
-```mysql-sql
-// if the parser for DDL
+```sqlite-sql
+# if the parser for DDL
 CREATE TABLE customer (name VARCHAR(20), age INT DEFAULT 0)
 ```
