@@ -64,7 +64,7 @@ This is the scrambleDB jdbc drive together with the required mysql jdbc driver.
 
 Use this jar file as the jdbc driver in an application line DBeaver or in an own written program.
 
-Example how to connect with the scrambleDB driver in Java using REST to connect to the converter:
+Example how to connect with the scrambleDB driver in Java using **REST** to connect to the converter:
 
 ```java
 import java.sql.Connection;
@@ -89,6 +89,8 @@ public class Main {
 
 }
 ```
+
+Example how to connect with the scrambleDB driver in Java using **Kafka** to connect to the converter:
 
 ```java
 import java.sql.Connection;
