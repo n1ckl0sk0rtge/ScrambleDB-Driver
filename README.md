@@ -141,6 +141,6 @@ The scrambleDB can be used as the original mysql driver for DML statements.
 Example:
 
 ```sqlite-sql
-# if the parser for DDL
+/* if the parser for DDL is configured the create tabel statement can be executed */
 CREATE TABLE customer (name VARCHAR(20), age INT DEFAULT 0)
 ```
