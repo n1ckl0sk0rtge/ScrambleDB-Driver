@@ -22,6 +22,8 @@ import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.model.JsonSchema;
 import org.apache.calcite.sql.validate.SqlConformance;
 
+import org.apache.calcite.tools.ConverterConnection;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
@@ -85,12 +87,18 @@ public interface CalciteConnectionConfig extends ConnectionConfig {
    * is not null, the result is never null. */
   <T> @PolyNull T rewriterFactory(Class<T> rewriterFactoryClass,
       @PolyNull T defaultRewriterFactory);
-  /** Returns the connection url for the converter.
+  /** Returns the connection type for the converter.
    */
-  String converterConnection();
-  /** Returns the api key for the converter.
+  ConverterConnection.Type converterConnection();
+  /** Returns the Rest endpoint of the converter.
    */
-  String converterAPIKey();
+  String converterRestServer();
+  /** Returns the kafka bootstrap servers.
+   */
+  String converterKafkaBootstrapServers();
+  /** Returns the kafka topic to communicate with the converter.
+   */
+  String converterKafkaTopic();
   /** Returns the value of {@link CalciteConnectionProperty#SCHEMA_FACTORY},
    * or a default schema factory if not set. If {@code defaultSchemaFactory}
    * is not null, the result is never null. */

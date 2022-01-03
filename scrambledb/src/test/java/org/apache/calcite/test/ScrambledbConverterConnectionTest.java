@@ -17,7 +17,7 @@
 
 package org.apache.calcite.test;
 
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterConnection;
 
 import org.junit.jupiter.api.Test;

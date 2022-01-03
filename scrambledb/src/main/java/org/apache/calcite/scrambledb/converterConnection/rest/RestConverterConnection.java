@@ -17,7 +17,7 @@
 package org.apache.calcite.scrambledb.converterConnection.rest;
 
 import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.model.Payload;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
@@ -35,11 +35,9 @@ import javax.ws.rs.core.Response;
 public class RestConverterConnection implements ConverterConnection {
 
   private final CalcitePrepare.Context context;
-  private final String apikey;
 
   public RestConverterConnection(CalcitePrepare.Context context) {
     // get api key from config
-    this.apikey = context.config().converterAPIKey();
     this.context = context;
   }
 
@@ -51,7 +49,7 @@ public class RestConverterConnection implements ConverterConnection {
     // create rest connection to converter
     Client client = ResteasyClientBuilderImpl.newClient();
     // get connection information from config
-    WebTarget target = client.target(this.context.config().converterConnection());
+    WebTarget target = client.target(this.context.config().converterRestServer());
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     RestServicesInterface proxy = restTarget.proxy(RestServicesInterface.class);
 
@@ -75,7 +73,7 @@ public class RestConverterConnection implements ConverterConnection {
     // create rest connection to converter
     Client client = ResteasyClientBuilderImpl.newClient();
     // get connection information from config
-    WebTarget target = client.target(this.context.config().converterConnection());
+    WebTarget target = client.target(this.context.config().converterRestServer());
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     RestServicesInterface proxy = restTarget.proxy(RestServicesInterface.class);
 

@@ -22,7 +22,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.ColumnStrategy;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
@@ -44,8 +44,6 @@ public class ScrambledbConfig {
   private final SqlTypeName type = SqlTypeName.VARCHAR;
   private static final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
   private static final String subTableConnector = "_";
-  private static final ConverterConnection.Type connectionType =
-      ConverterConnection.Type.KAFKA;
 
   private final UUID kafka_identifier = UUID.randomUUID();
   private final RelDataType linkerRelDataType;
@@ -63,7 +61,7 @@ public class ScrambledbConfig {
   }
 
   public ConverterConnection getConverterConnection(CalcitePrepare.Context context) {
-    switch (this.getConnectionType()) {
+    switch (context.config().converterConnection()) {
     case REST:
       return new RestConverterConnection(context);
     case KAFKA:
@@ -76,10 +74,6 @@ public class ScrambledbConfig {
 
   public String createSubTableString(String rootTableName, String columName) {
     return rootTableName + subTableConnector + columName;
-  }
-
-  public ConverterConnection.Type getConnectionType() {
-    return connectionType;
   }
 
   public Integer getSize() {

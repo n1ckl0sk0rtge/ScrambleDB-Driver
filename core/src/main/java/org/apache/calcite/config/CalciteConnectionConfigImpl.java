@@ -27,6 +27,8 @@ import org.apache.calcite.sql.fun.SqlLibraryOperatorTableFactory;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 
+import org.apache.calcite.tools.ConverterConnection;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 
@@ -160,14 +162,27 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getPlugin(rewriterFactoryClass, defaultRewriterFactory);
   }
 
-  @Override public String converterConnection() {
-    return CalciteConnectionProperty.CONVERTER_URL.wrap(properties)
-        .getString("");
+  @Override public ConverterConnection.Type converterConnection() {
+    return CalciteConnectionProperty.CONVERTER_CONNECTION_TYPE.wrap(properties)
+        .getEnum(ConverterConnection.Type.class);
   }
 
-  @Override public String converterAPIKey() {
-    return CalciteConnectionProperty.CONVERTER_APIKEY.wrap(properties)
-        .getString("");
+  @Override
+  public String converterRestServer() {
+    return CalciteConnectionProperty.CONVERTER_REST_SERVER.wrap(properties)
+        .getString();
+  }
+
+  @Override
+  public String converterKafkaBootstrapServers() {
+    return CalciteConnectionProperty.CONVERTER_KAFKA_BOOTSTRAP_SERVERS.wrap(properties)
+        .getString();
+  }
+
+  @Override
+  public String converterKafkaTopic() {
+    return CalciteConnectionProperty.CONVERTER_KAFKA_TOPIC.wrap(properties)
+        .getString();
   }
 
   @Override public <T> @PolyNull T schemaFactory(Class<T> schemaFactoryClass,

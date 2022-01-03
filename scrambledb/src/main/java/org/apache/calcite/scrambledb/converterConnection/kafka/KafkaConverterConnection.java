@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.confluent.kafka.serializers.KafkaJsonDeserializer;
 import io.confluent.kafka.serializers.KafkaJsonSerializer;
 import org.apache.calcite.jdbc.CalcitePrepare;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.scrambledb.converterConnection.model.Payload;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -51,11 +51,11 @@ public class KafkaConverterConnection implements ConverterConnection {
   private final static Duration KAFKA_RESPONSE_TIMEOUT = Duration.ofSeconds(5);
 
   public KafkaConverterConnection(CalcitePrepare.Context context, UUID identifier) {
-    this.kafkaBootstrapServers = "192.168.64.3:9093";
+    this.kafkaBootstrapServers = context.config().converterKafkaBootstrapServers();
     // identifier for kafka messaging
     this.identifier = identifier;
     // the kafka topic to produce and subscribe
-    this.kafkaTopic = "scrambleDB";
+    this.kafkaTopic = context.config().converterKafkaTopic();
   }
 
   @Override public Type getType() {

@@ -21,6 +21,7 @@ import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.model.JsonSchema;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.tools.SqlRewriterFactory;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -113,16 +114,23 @@ public enum CalciteConnectionProperty implements ConnectionProperty {
    * {@link SqlRewriterFactory}. */
   REWRITER_FACTORY("rewriterFactory", Type.PLUGIN, null, false),
 
-  /** Converter connection url
+  /** Converter connection type
    *
-   * <p>The url to the converter instance for scrambelDB.
+   * <p>The type of connection to interact with the converter instance for scrambelDB.
    */
-  CONVERTER_URL("converter.url", Type.STRING, null, false),
-  /** Converter connection url
+  CONVERTER_CONNECTION_TYPE("converter.connection", Type.ENUM, null, false, ConverterConnection.Type.class),
+  /** Converter rest connection server
    *
-   * <p>The url to the converter instance for scrambelDB.
    */
-  CONVERTER_APIKEY("converter.apikey", Type.STRING, null, false),
+  CONVERTER_REST_SERVER("converter.rest.server", Type.STRING, null, false),
+  /** Converter kafka connection bootstrap servers
+   *
+   */
+  CONVERTER_KAFKA_BOOTSTRAP_SERVERS("converter.kafka.bootstrapServers", Type.STRING, null, false),
+  /** Converter kafka connection bootstrap servers
+   *
+   */
+  CONVERTER_KAFKA_TOPIC("converter.kafka.topic", Type.STRING, null, false),
 
   /** Name of initial schema. */
   SCHEMA("schema", Type.STRING, null, false),

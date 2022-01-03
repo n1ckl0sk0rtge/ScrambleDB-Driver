@@ -36,7 +36,7 @@ import org.apache.calcite.schema.Table;
 import org.apache.calcite.scrambledb.ScrambledbConfig;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
-import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
+import org.apache.calcite.tools.ConverterConnection;
 import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.SqlRewriterRule;
