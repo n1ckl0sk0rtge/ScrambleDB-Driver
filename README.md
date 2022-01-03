@@ -64,7 +64,7 @@ This is the scrambleDB jdbc drive together with the required mysql jdbc driver.
 
 Use this jar file as the jdbc driver in an application line DBeaver or in an own written program.
 
-Example how to connect with the scrambleDB driver in Java:
+Example how to connect with the scrambleDB driver in Java using REST to connect to the converter:
 
 ```java
 import java.sql.Connection;
@@ -89,6 +89,32 @@ public class Main {
 
 }
 ```
+
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+public class Main {
+
+    public static void main(String[] args) {
+        static String config =
+                "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory;"
+                        + "parserFactory=org.apache.calcite.scrambledb.ddl.ScrambledbExecutor#PARSER_FACTORY;"
+                        + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
+                        + "converter.connection=KAFKA;"
+                        + "converter.kafka.bootstrapServers=localhost:9092;"
+                        + "converter.kafka.topic=scrambleDB;"
+                        + "schema.jdbcDriver=com.mysql.cj.jdbc.Driver;"
+                        + "schema.jdbcUrl=jdbc:mysql://localhost/data;"
+                        + "schema.jdbcUser=mysql;"
+                        + "schema.jdbcPassword=mysql;";
+        Class.forName("org.apache.calcite.jdbc.Driver");
+        DriverManager.getConnection(config);
+    }
+
+}
+```
+
 The jdbc url contains all configurations needed to get the scrambleDB driver work. The following table lists all relevant configuration options.
 
 | Configuration                      | Description                                                                                                                                                                                                                                                                                                                                                              |
