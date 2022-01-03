@@ -30,15 +30,15 @@ import java.util.List;
 public class Payload {
 
   @JsonProperty
-  private List<String> input;
+  private List<String> data;
 
   Payload() {}
 
-  public Payload(List<String> input) {
-    this.input = input;
+  public Payload(List<String> data) {
+    this.data = data;
   }
 
-  public List<String> getInput() {
-    return input;
+  public List<String> getData() {
+    return data;
   }
 }

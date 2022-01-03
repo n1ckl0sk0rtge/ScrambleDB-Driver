@@ -23,6 +23,7 @@ import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterCon
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 public class ScrambledbConverterConnectionTest {
@@ -31,8 +32,10 @@ public class ScrambledbConverterConnectionTest {
 
     ConverterConnection connection = new KafkaConverterConnection(null, UUID.randomUUID());
 
-    System.out.println(connection.getPseudonyms(Arrays.asList("test", "test2")));
-
+    List<String> pseudonyms = connection.getPseudonyms(Arrays.asList("lucas","lucas","max"));
+    System.out.println(pseudonyms);
+    List<String> identities = connection.convert(pseudonyms);
+    System.out.println(identities);
   }
 
 }

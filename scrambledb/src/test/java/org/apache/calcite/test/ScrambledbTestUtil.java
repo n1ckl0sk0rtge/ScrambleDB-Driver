@@ -29,7 +29,7 @@ public class ScrambledbTestUtil {
 
   static String config =
       "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory;"
-          + "parserFactory=org.apache.calcite.scrambledb.ScrambledbExecutor#PARSER_FACTORY;"
+          + "parserFactory=org.apache.calcite.scrambledb.ddl.ScrambledbExecutor#PARSER_FACTORY;"
           + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
           + "converter.url=http://192.168.64.3:8080;"
           + "converter.apikey=test;"

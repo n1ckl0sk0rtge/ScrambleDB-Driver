@@ -42,11 +42,11 @@ import java.util.List;
  * the command to an appropriate {@code execute} method. For example,
  * "CREATE TABLE" ({@link SqlCreateTable}) is dispatched to
  * {@link #execute(SqlCreateTable, CalcitePrepare.Context)}. */
-public class ScrambledbDDLExecutor extends DdlExecutorImpl {
+public class ScrambledbExecutor extends DdlExecutorImpl {
 
-  public static final ScrambledbDDLExecutor INSTANCE = new ScrambledbDDLExecutor();
+  public static final ScrambledbExecutor INSTANCE = new ScrambledbExecutor();
 
-  protected ScrambledbDDLExecutor() {  }
+  protected ScrambledbExecutor() {  }
 
   /** Parser factory. */
   public static final SqlParserImplFactory PARSER_FACTORY =
@@ -56,7 +56,7 @@ public class ScrambledbDDLExecutor extends DdlExecutorImpl {
         }
 
         @Override public DdlExecutor getDdlExecutor() {
-          return ScrambledbDDLExecutor.INSTANCE;
+          return ScrambledbExecutor.INSTANCE;
         }
 
       };
@@ -66,8 +66,6 @@ public class ScrambledbDDLExecutor extends DdlExecutorImpl {
       CalcitePrepare.Context context) {
 
     CreateTableExecutor exec = new CreateTableExecutor(create, context);
-
-    ScrambledbConfig config = ScrambledbConfig.INSTANCE;
 
     /* Create an empty table with the given name
      * and the given columns.
@@ -79,20 +77,20 @@ public class ScrambledbDDLExecutor extends DdlExecutorImpl {
       exec.execute();
 
       TableColumn linkerColumn = new TableColumn(
-          config.getLinkerName(),
+          ScrambledbConfig.INSTANCE.getLinkerName(),
           SqlNumericLiteral.createCharString(
-              config.getDefaultValue(),
+              ScrambledbConfig.INSTANCE.getDefaultValue(),
               SqlParserPos.ZERO),
           new BasicSqlType(
               RelDataTypeSystemImpl.DEFAULT,
-              config.getType(),
-              config.getSize()),
-          config.getColumnStrategy()
+              ScrambledbConfig.INSTANCE.getType(),
+              ScrambledbConfig.INSTANCE.getSize()),
+          ScrambledbConfig.INSTANCE.getColumnStrategy()
       );
 
       for (TableColumn column : exec.columns) {
         exec.executeWith(
-            config.createSubTableString(
+            ScrambledbConfig.INSTANCE.createSubTableString(
                 exec.getName(),
                 column.getName()),
             ImmutableList.<TableColumn>builder()

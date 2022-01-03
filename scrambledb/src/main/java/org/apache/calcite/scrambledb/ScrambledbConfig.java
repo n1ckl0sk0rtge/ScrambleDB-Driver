@@ -38,14 +38,14 @@ public class ScrambledbConfig {
 
   public static final ScrambledbConfig INSTANCE = new ScrambledbConfig();
 
-  private static final String linkerName = "linkerID";
+  private final String linkerName = "linkerID";
   private static final String defaultValue = "Null";
-  private static final Integer size = 500;
-  private static final SqlTypeName type = SqlTypeName.VARCHAR;
+  private final Integer size = 500;
+  private final SqlTypeName type = SqlTypeName.VARCHAR;
   private static final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
   private static final String subTableConnector = "_";
   private static final ConverterConnection.Type connectionType =
-      ConverterConnection.Type.REST;
+      ConverterConnection.Type.KAFKA;
 
   private final UUID kafka_identifier = UUID.randomUUID();
   private final RelDataType linkerRelDataType;

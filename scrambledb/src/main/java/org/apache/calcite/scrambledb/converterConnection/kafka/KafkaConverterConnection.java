@@ -54,9 +54,8 @@ public class KafkaConverterConnection implements ConverterConnection {
     this.kafkaBootstrapServers = "192.168.64.3:9093";
     // identifier for kafka messaging
     this.identifier = identifier;
-    System.out.println(identifier);
     // the kafka topic to produce and subscribe
-    this.kafkaTopic = "scrambleDBconversion";
+    this.kafkaTopic = "scrambleDB";
   }
 
   @Override public Type getType() {
@@ -109,7 +108,7 @@ public class KafkaConverterConnection implements ConverterConnection {
 
     try {
       if (latch.await(KAFKA_RESPONSE_TIMEOUT.get(ChronoUnit.SECONDS), TimeUnit.SECONDS)) {
-        return response[0].getInput();
+        return response[0].getData();
       } else {
         throw new Exception("[Error] could not get response from converter. Session timeout.");
       }
