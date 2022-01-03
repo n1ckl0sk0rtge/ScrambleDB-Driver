@@ -55,7 +55,9 @@ driver a mysql database is required and has to be deployed.
 
 To get the scrambleDB driver you have to build the project by downloading the code and running the following command:
 
-`./gradlew build`
+```shell
+./gradlew build
+```
 
 In the build folder (build/libs) inside the submodule `scrambledb` there is a jar file called `calcite-scrambledb-1.28.0-SNAPSHOT-all.jar`.
 This is the scrambleDB jdbc drive together with the required mysql jdbc driver.
