@@ -141,6 +141,26 @@ The scrambleDB can be used as the original mysql driver for DML statements.
 Example:
 
 ```sql
-/* if the parser for DDL is configured the create tabel statement can be executed */
+/* if the parser for DDL is configured the create table statement can be executed */
 CREATE TABLE customer (name VARCHAR(20), age INT DEFAULT 0)
+
+INSERT INTO customer (name) VALUES ('max')
+INSERT INTO customer (name, age) VALUES ('lisa', 31)
+INSERT INTO customer VALUES ('lucas', 12)
+SELECT * FROM customer
+SELECT Count(name) FROM customer
+
+CREATE TABLE hotel (name VARCHAR(20), street VARCHAR(25), zip INT)
+INSERT INTO hotel VALUES ('b&b', 'hotel street', '12345')
+SELECT name FROM hotel
+
+CREATE TABLE guest (name VARCHAR(20), hotel VARCHAR(20))
+INSERT INTO guest VALUES ('lisa', 'b&b')
+
+SELECT guest.name, customer.age from guest JOIN customer ON guest.name=customer.name
+
+/* if the parser for DDL is configured the drop table statement can be executed */
+DROP TABLE customer
+DROP TABLE hotel
+DROP TABLE guest
 ```
