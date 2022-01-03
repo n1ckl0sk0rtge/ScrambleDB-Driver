@@ -16,12 +16,9 @@
  */
 package org.apache.calcite.scrambledb.converterConnection.rest;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.scrambledb.converterConnection.ConverterConnection;
-import org.apache.calcite.scrambledb.converterConnection.rest.model.ConversionRequest;
-import org.apache.calcite.scrambledb.converterConnection.rest.model.GenerationRequest;
+import org.apache.calcite.scrambledb.converterConnection.model.Payload;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
@@ -58,8 +55,8 @@ public class RestConverterConnection implements ConverterConnection {
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     RestServicesInterface proxy = restTarget.proxy(RestServicesInterface.class);
 
-    GenerationRequest request = new GenerationRequest(this.apikey, input);
-    Response response = proxy.pseudonyms(request);
+    Payload payload = new Payload(input);
+    Response response = proxy.pseudonyms(payload);
 
     List<String> res;
     try {
@@ -82,8 +79,8 @@ public class RestConverterConnection implements ConverterConnection {
     ResteasyWebTarget restTarget = (ResteasyWebTarget) target;
     RestServicesInterface proxy = restTarget.proxy(RestServicesInterface.class);
 
-    ConversionRequest request = new ConversionRequest(this.apikey, pseudonyms);
-    Response response = proxy.convert(request);
+    Payload payload = new Payload(pseudonyms);
+    Response response = proxy.convert(payload);
 
     List<String> res;
     try {

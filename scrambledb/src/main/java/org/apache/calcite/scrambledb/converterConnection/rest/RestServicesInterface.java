@@ -16,8 +16,7 @@
  */
 package org.apache.calcite.scrambledb.converterConnection.rest;
 
-import org.apache.calcite.scrambledb.converterConnection.rest.model.ConversionRequest;
-import org.apache.calcite.scrambledb.converterConnection.rest.model.GenerationRequest;
+import org.apache.calcite.scrambledb.converterConnection.model.Payload;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -36,13 +35,13 @@ public interface RestServicesInterface {
   @Path("/pseudonym")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  Response pseudonyms(GenerationRequest request);
+  Response pseudonyms(Payload payload);
 
   @POST
   @Path("/convert")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  Response convert(ConversionRequest request);
+  Response convert(Payload payload);
 
 
 }

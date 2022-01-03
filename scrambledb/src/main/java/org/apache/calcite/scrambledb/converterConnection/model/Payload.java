@@ -14,31 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.converterConnection.rest.model;
+package org.apache.calcite.scrambledb.converterConnection.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaInject;
+import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaString;
 
 import java.util.List;
 
 /**
- * Pattern for a conversion request.
+ * Pattern for generation request.
  */
-public class ConversionRequest {
+@JsonSchemaInject(strings = {@JsonSchemaString(path="javaType",
+    value="org.apache.calcite.scrambledb.converterConnection.model.Payload")})
+public class Payload {
 
-  private String authToken;
-  private List<String> pseudonyms;
+  @JsonProperty
+  private List<String> input;
 
-  ConversionRequest() {}
+  Payload() {}
 
-  public ConversionRequest(String authToken, List<String> pseudonyms) {
-    this.authToken = authToken;
-    this.pseudonyms = pseudonyms;
+  public Payload(List<String> input) {
+    this.input = input;
   }
 
-  public String getAuthToken() {
-    return authToken;
+  public List<String> getInput() {
+    return input;
   }
-
-  public List<String> getPseudonyms() {
-    return pseudonyms;
-  }
-
 }

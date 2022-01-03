@@ -14,30 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.calcite.scrambledb.converterConnection.rest.model;
-
-import java.util.List;
 
 /**
- * Pattern for generation request.
+ * package info.
  */
-public class GenerationRequest {
-
-  private String authToken;
-  private List<String> input;
-
-  GenerationRequest() {}
-
-  public GenerationRequest(String authToken, List<String> input) {
-    this.authToken = authToken;
-    this.input = input;
-  }
-
-  public String getAuthToken() {
-    return authToken;
-  }
-
-  public List<String> getInput() {
-    return input;
-  }
-}
+package org.apache.calcite.scrambledb.converterConnection.model;

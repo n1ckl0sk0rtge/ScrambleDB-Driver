@@ -31,7 +31,7 @@ public class ScrambledbConverterConnectionTest {
 
     ConverterConnection connection = new KafkaConverterConnection(null, UUID.randomUUID());
 
-    connection.getPseudonyms(Arrays.asList("test", "test2"));
+    System.out.println(connection.getPseudonyms(Arrays.asList("test", "test2")));
 
   }
 
