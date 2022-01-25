@@ -27,7 +27,7 @@ import java.sql.SQLException;
  */
 public class ScrambledbTestUtil {
 
-  static String config =
+  static String config = //"jdbc:calcite:model=/Users/nkoertge/_projects/scrambleDBdriver/scrambledb/src/test/java/org/apache/calcite/test/model.yaml";
       "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory;"
           + "parserFactory=org.apache.calcite.scrambledb.ddl.ScrambledbExecutor#PARSER_FACTORY;"
           + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
