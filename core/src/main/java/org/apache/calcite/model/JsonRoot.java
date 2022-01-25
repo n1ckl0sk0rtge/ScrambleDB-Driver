@@ -73,6 +73,12 @@ public class JsonRoot {
    */
   public final List<JsonSchema> schemas = new ArrayList<>();
 
+  public final @Nullable JsonParserFactory parserFactory = null;
+
+  public final @Nullable JsonRewriterFactory rewriterFactory = null;
+
+  public final @Nullable JsonConverter converter = null;
+
   @JsonCreator
   public JsonRoot(
       @JsonProperty(value = "version", required = true) String version,

@@ -1,0 +1,17 @@
+version: 1.0
+defaultSchema: datalake
+schemas:
+- name: datalake
+  type: custom
+  factory: org.apache.calcite.adapter.jdbc.JdbcSchema$Factory
+  operand:
+    jdbcDriver: com.mysql.cj.jdbc.Driver
+    jdbcUrl: "jdbc:mysql://192.168.64.3/datalake"
+    jdbcUser: datalake
+    jdbcPassword: datalake
+parserFactory: org.apache.calcite.scrambledb.ddl.ScrambledbExecutor#PARSER_FACTORY
+rewriterFactory: org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY
+converter:
+  connection: KAFKA
+  bootstrapServers: 192.168.64.3:9092
+  topic: scrambleDB
