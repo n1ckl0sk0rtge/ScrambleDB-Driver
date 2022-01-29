@@ -36,11 +36,12 @@ val testOracle by configurations.creating(integrationTestConfig)
 val testPostgresql by configurations.creating(integrationTestConfig)
 val testMysql by configurations.creating(integrationTestConfig)
 
+
 dependencies {
     api(project(":linq4j"))
 
     api("com.esri.geometry:esri-geometry-api")
-    api("com.fasterxml.jackson.core:jackson-annotations")
+    //api("com.fasterxml.jackson.core:jackson-annotations")
     api("com.google.errorprone:error_prone_annotations")
     api("com.google.guava:guava")
     api("org.apache.calcite.avatica:avatica-core")
@@ -48,11 +49,11 @@ dependencies {
     api("org.checkerframework:checker-qual")
     api("org.slf4j:slf4j-api")
 
-    implementation("com.fasterxml.jackson.core:jackson-core")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    //implementation("com.fasterxml.jackson.core:jackson-core")
+    //implementation("com.fasterxml.jackson.core:jackson-databind")
+    //implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     implementation("com.google.uzaygezen:uzaygezen-core")
-    implementation("com.jayway.jsonpath:json-path")
+    //implementation("com.jayway.jsonpath:json-path")
     implementation("com.yahoo.datasketches:sketches-core")
     implementation("commons-codec:commons-codec")
     implementation("net.hydromatic:aggdesigner-algorithm")

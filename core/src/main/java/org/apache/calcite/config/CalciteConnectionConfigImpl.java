@@ -26,7 +26,6 @@ import org.apache.calcite.sql.fun.SqlLibrary;
 import org.apache.calcite.sql.fun.SqlLibraryOperatorTableFactory;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
-
 import org.apache.calcite.tools.ConverterConnection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -167,20 +166,17 @@ public class CalciteConnectionConfigImpl extends ConnectionConfigImpl
         .getEnum(ConverterConnection.Type.class);
   }
 
-  @Override
-  public String converterRestServer() {
+  @Override public String converterRestServer() {
     return CalciteConnectionProperty.CONVERTER_REST_SERVER.wrap(properties)
         .getString();
   }
 
-  @Override
-  public String converterKafkaBootstrapServers() {
+  @Override public String converterKafkaBootstrapServers() {
     return CalciteConnectionProperty.CONVERTER_KAFKA_BOOTSTRAP_SERVERS.wrap(properties)
         .getString();
   }
 
-  @Override
-  public String converterKafkaTopic() {
+  @Override public String converterKafkaTopic() {
     return CalciteConnectionProperty.CONVERTER_KAFKA_TOPIC.wrap(properties)
         .getString();
   }

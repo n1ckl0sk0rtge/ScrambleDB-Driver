@@ -22,11 +22,10 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.schema.ColumnStrategy;
-import org.apache.calcite.tools.ConverterConnection;
-import org.apache.calcite.scrambledb.converterConnection.kafka.KafkaConverterConnection;
-import org.apache.calcite.scrambledb.converterConnection.rest.RestConverterConnection;
+import org.apache.calcite.scrambledb.rest.RestConverterConnection;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.tools.ConverterConnection;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +44,6 @@ public class ScrambledbConfig {
   private static final ColumnStrategy columnStrategy = ColumnStrategy.DEFAULT;
   private static final String subTableConnector = "_";
 
-  private final UUID kafka_identifier = UUID.randomUUID();
   private final RelDataType linkerRelDataType;
 
   private ScrambledbConfig() {
@@ -64,8 +62,6 @@ public class ScrambledbConfig {
     switch (context.config().converterConnection()) {
     case REST:
       return new RestConverterConnection(context);
-    case KAFKA:
-      return new KafkaConverterConnection(context, this.kafka_identifier);
     default:
       System.out.println("[Error] could not find connection type for converter. Switched to default: REST");
       return new RestConverterConnection(context);

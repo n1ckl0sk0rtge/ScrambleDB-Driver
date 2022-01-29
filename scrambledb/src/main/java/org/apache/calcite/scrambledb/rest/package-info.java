@@ -18,4 +18,4 @@
 /**
  * package info.
  */
-package org.apache.calcite.scrambledb.converterConnection.rest;
+package org.apache.calcite.scrambledb.rest;

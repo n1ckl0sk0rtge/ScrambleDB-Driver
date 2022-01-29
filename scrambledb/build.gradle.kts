@@ -26,12 +26,6 @@ version = "1.28.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://packages.confluent.io/maven/")
-    }
-    maven {
-        url = uri("https://jitpack.io")
-    }
 }
 
 dependencies {
@@ -39,15 +33,7 @@ dependencies {
     api(project(":linq4j"))
     api("org.apache.calcite.avatica:avatica-core:1.20.0")
 
-    implementation("org.jboss.resteasy:resteasy-client:5.0.1.Final")
-    implementation("org.jboss.resteasy:resteasy-jackson2-provider:5.0.1.Final")
-
-    implementation("org.apache.kafka:kafka-clients:3.0.0")
-
-    implementation("io.confluent:kafka-json-schema-serializer:7.0.1")
-    implementation("com.github.everit-org.json-schema:org.everit.json.schema:1.12.2")
-
-    runtimeOnly("mysql:mysql-connector-java:8.0.26")
+    //runtimeOnly("mysql:mysql-connector-java:8.0.26")
 
     testImplementation("mysql:mysql-connector-java:8.0.26")
     testImplementation(project(":core", "testClasses"))

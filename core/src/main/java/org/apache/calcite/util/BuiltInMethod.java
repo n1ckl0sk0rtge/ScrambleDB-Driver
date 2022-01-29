@@ -88,7 +88,6 @@ import org.apache.calcite.runtime.Enumerables;
 import org.apache.calcite.runtime.FlatLists;
 import org.apache.calcite.runtime.FunctionContexts;
 import org.apache.calcite.runtime.GeoFunctions;
-import org.apache.calcite.runtime.JsonFunctions;
 import org.apache.calcite.runtime.Matcher;
 import org.apache.calcite.runtime.Pattern;
 import org.apache.calcite.runtime.RandomFunction;
@@ -107,10 +106,6 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Schemas;
 import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.calcite.sql.SqlJsonConstructorNullClause;
-import org.apache.calcite.sql.SqlJsonQueryEmptyOrErrorBehavior;
-import org.apache.calcite.sql.SqlJsonQueryWrapperBehavior;
-import org.apache.calcite.sql.SqlJsonValueEmptyOrErrorBehavior;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -354,40 +349,6 @@ public enum BuiltInMethod {
   XML_TRANSFORM(XmlFunctions.class, "xmlTransform", String.class, String.class),
   EXTRACT_XML(XmlFunctions.class, "extractXml", String.class, String.class, String.class),
   EXISTS_NODE(XmlFunctions.class, "existsNode", String.class, String.class, String.class),
-  JSONIZE(JsonFunctions.class, "jsonize", Object.class),
-  DEJSONIZE(JsonFunctions.class, "dejsonize", String.class),
-  JSON_VALUE_EXPRESSION(JsonFunctions.class, "jsonValueExpression",
-      String.class),
-  JSON_API_COMMON_SYNTAX(JsonFunctions.class, "jsonApiCommonSyntax",
-      String.class, String.class),
-  JSON_EXISTS(JsonFunctions.class, "jsonExists", String.class, String.class),
-  JSON_VALUE(JsonFunctions.class, "jsonValue", String.class, String.class,
-      SqlJsonValueEmptyOrErrorBehavior.class, Object.class,
-      SqlJsonValueEmptyOrErrorBehavior.class, Object.class),
-  JSON_QUERY(JsonFunctions.class, "jsonQuery", String.class,
-      String.class,
-      SqlJsonQueryWrapperBehavior.class,
-      SqlJsonQueryEmptyOrErrorBehavior.class,
-      SqlJsonQueryEmptyOrErrorBehavior.class),
-  JSON_OBJECT(JsonFunctions.class, "jsonObject",
-      SqlJsonConstructorNullClause.class),
-  JSON_TYPE(JsonFunctions.class, "jsonType", String.class),
-  JSON_DEPTH(JsonFunctions.class, "jsonDepth", String.class),
-  JSON_KEYS(JsonFunctions.class, "jsonKeys", String.class),
-  JSON_PRETTY(JsonFunctions.class, "jsonPretty", String.class),
-  JSON_LENGTH(JsonFunctions.class, "jsonLength", String.class),
-  JSON_REMOVE(JsonFunctions.class, "jsonRemove", String.class),
-  JSON_STORAGE_SIZE(JsonFunctions.class, "jsonStorageSize", String.class),
-  JSON_OBJECTAGG_ADD(JsonFunctions.class, "jsonObjectAggAdd", Map.class,
-      String.class, Object.class, SqlJsonConstructorNullClause.class),
-  JSON_ARRAY(JsonFunctions.class, "jsonArray",
-      SqlJsonConstructorNullClause.class),
-  JSON_ARRAYAGG_ADD(JsonFunctions.class, "jsonArrayAggAdd",
-      List.class, Object.class, SqlJsonConstructorNullClause.class),
-  IS_JSON_VALUE(JsonFunctions.class, "isJsonValue", String.class),
-  IS_JSON_OBJECT(JsonFunctions.class, "isJsonObject", String.class),
-  IS_JSON_ARRAY(JsonFunctions.class, "isJsonArray", String.class),
-  IS_JSON_SCALAR(JsonFunctions.class, "isJsonScalar", String.class),
   ST_GEOM_FROM_TEXT(GeoFunctions.class, "ST_GeomFromText", String.class),
   INITCAP(SqlFunctions.class, "initcap", String.class),
   SUBSTRING(SqlFunctions.class, "substring", String.class, int.class,

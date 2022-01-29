@@ -47,7 +47,6 @@ import org.apache.calcite.util.Util;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -74,7 +73,6 @@ public class ModelHandler {
       .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
       .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
       .configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-  private static final ObjectMapper YAML_MAPPER = new YAMLMapper();
 
   private final CalciteConnection connection;
   private final Deque<Pair<? extends @Nullable String, SchemaPlus>> schemaStack =
@@ -95,12 +93,10 @@ public class ModelHandler {
     if (uri.startsWith("inline:")) {
       // trim here is to correctly autodetect if it is json or not in case of leading spaces
       String inline = uri.substring("inline:".length()).trim();
-      mapper = (inline.startsWith("/*") || inline.startsWith("{"))
-          ? JSON_MAPPER
-          : YAML_MAPPER;
+      mapper = JSON_MAPPER;
       root = mapper.readValue(inline, JsonRoot.class);
     } else {
-      mapper = uri.endsWith(".yaml") || uri.endsWith(".yml") ? YAML_MAPPER : JSON_MAPPER;
+      mapper =  JSON_MAPPER;
       root = mapper.readValue(new File(uri), JsonRoot.class);
     }
     visit(root);
