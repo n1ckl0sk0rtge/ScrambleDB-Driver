@@ -33,6 +33,7 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.scrambledb.DatabaseCall;
 import org.apache.calcite.scrambledb.ScrambledbConfig;
 import org.apache.calcite.scrambledb.ScrambledbErrors;
 import org.apache.calcite.scrambledb.ScrambledbUtil;
@@ -247,12 +248,11 @@ public class ScrambledbInsertRule implements SqlRewriterRule {
         // Run all underlying sql queries here and only return the last
         // query to run on the "origin" way
         if (!(i == tuples.size() - 1 && j == tuples.get(i).size() - 1)) {
-          PreparedStatement statement =
-              context.getRelRunner().prepareStatement(newNode);
-          statement.execute();
-          statement.close();
+          PreparedStatement statement = context.getRelRunner().prepareStatement(newNode);
+          Thread executeInsert = new Thread(
+              new DatabaseCall(statement, false));
+          executeInsert.start();
         }
-
       }
     }
     return newNode;
