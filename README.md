@@ -90,33 +90,6 @@ public class Main {
 }
 ```
 
-Example how to connect with the scrambleDB driver in Java using **Kafka** to connect to the converter:
-
-```java
-import java.sql.Connection;
-import java.sql.DriverManager;
-
-public class Main {
-
-    public static void main(String[] args) {
-        static String config =
-                "jdbc:calcite:schemaFactory=org.apache.calcite.adapter.jdbc.JdbcSchema$Factory;"
-                        + "parserFactory=org.apache.calcite.scrambledb.ddl.ScrambledbExecutor#PARSER_FACTORY;"
-                        + "rewriterFactory=org.apache.calcite.scrambledb.rewriter.ScrambledbRewriterFactory#FACTORY;"
-                        + "converter.connection=KAFKA;"
-                        + "converter.kafka.bootstrapServers=localhost:9092;"
-                        + "converter.kafka.topic=scrambleDB;"
-                        + "schema.jdbcDriver=com.mysql.cj.jdbc.Driver;"
-                        + "schema.jdbcUrl=jdbc:mysql://localhost/data;"
-                        + "schema.jdbcUser=mysql;"
-                        + "schema.jdbcPassword=mysql;";
-        Class.forName("org.apache.calcite.jdbc.Driver");
-        DriverManager.getConnection(config);
-    }
-
-}
-```
-
 The jdbc url contains all configurations needed to get the scrambleDB driver work. The following table lists all relevant configuration options.
 
 | Configuration                      | Description                                                                                                                                                                                                                                                                                                                                                              |
@@ -125,9 +98,7 @@ The jdbc url contains all configurations needed to get the scrambleDB driver wor
 | `parserFactory`                    | By defining a parser factory teh default parser will be extended by the functionality of the parser created by this factory. The `ScrambledbExecutor#PARSER_FACTORY` extends the default parser to allow the creation and the drop of tables in teh database, which is not supported by default. If this configuration is not provided only DML queries can be executed. |
 | `rewriterFactory`                  | The rewriter Factory provides a SQL rewriter to change sql queries. The default rewriter will not rewrite the queries. ScrambleDB uses its own rewriter to enable the scrambleDB functionality. Providing this factory in the config enables ScrambleDB.                                                                                                                 |
 | `converter.connection`             | To tell the driver how to connect to the converter the connection type can be specified by this configuration. There are two option, `REST` and `KAFKA` for this value.                                                                                                                                                                                                  |
-| `converter.rest.server`            | If `REST` is selected as the connection type the rest endpoint has to be specified in the config. Example: `converter.rest.server=http://localhost:8080`.                                                                                                                                                                                                                |
-| `converter.kafka.bootstrapServers` | In case `KAFKA` is selected as teh connection type the bootstrap servers has to bed defined. Example: `converter.kafka.bootstrapServers=localhost:9092`.                                                                                                                                                                                                                 |
-| `converter.kafka.topic`            | To publish and consume messages through kafka a topic has to be provided where the driver and the converter are connected to. Exampel: `converter.kafka.topic=scrambleDB`.                                                                                                                                                                                               |
+| `converter.rest.server`            | If `REST` is selected as the connection type the rest endpoint has to be specified in the config. Example: `converter.rest.server=http://localhost:8080`.                                                                                                                                                                                                          |                                                                                                                             |
 | `schema.jdbcDriver`                | Defines the class path for the driver that calcite (as part of scrambleDB) will us to interact with the database.                                                                                                                                                                                                                                                        |
 | `schema.jdbcUrl`                   | The url to the database. Example `schema.jdbcUrl=jdbc:mysql://localhost/database`.                                                                                                                                                                                                                                                                                       |
 | `schema.jdbcUser`                  | The user to login to the database.                                                                                                                                                                                                                                                                                                                                       |
