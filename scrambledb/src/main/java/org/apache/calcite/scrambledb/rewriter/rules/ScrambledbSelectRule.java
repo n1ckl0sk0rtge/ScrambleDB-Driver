@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -156,7 +157,7 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
     RelBuilder builder = RelBuilder.create(config);
     // convert those tables to in memory tables with pseudonyms converted to identities
     Stack<TableScan> inMemoryTableScans =
-        getConvertedTables(context, builder, schema.plus(), defaultJdbcTableScan, subTables);
+        getConvertedTables(context, schema.plus(), defaultJdbcTableScan, subTables);
     // start with the first right join element
     RelNode rightJoinElement = inMemoryTableScans.pop();
     // join all subtables together -> creating the relational expr for that
@@ -236,7 +237,6 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
 
   private Stack<TableScan> getConvertedTables(
       CalcitePrepare.Context context,
-      RelBuilder builder,
       SchemaPlus schemaPlus,
       JdbcTableScan defaultJdbcTableScan,
       Stack<JdbcTable> tables) {
@@ -247,19 +247,35 @@ public class ScrambledbSelectRule implements SqlRewriterRule  {
 
     List<List<String>> pseudonyms = new ArrayList<>();
     List<List<Object[]>> data = new ArrayList<>();
+    List<DatabaseCall> scans = new ArrayList<>();
+
+    CountDownLatch countDownLatch = new CountDownLatch(tables.size());
     for (JdbcTable table : tables) {
       // get JdbcTable values (pseudonyms and data)
-      Map<Object, Object[]> tableData = table.scan(context.getDataContext()).toMap(key -> {
+      DatabaseCall d = new DatabaseCall(table, context.getDataContext(), true, countDownLatch);
+      Thread executeScan = new Thread(d);
+      executeScan.start();
+      scans.add(d);
+      /*Map<Object, Object[]> tableData = table.scan(context.getDataContext()).toMap(key -> {
         // there should always be at least one element for each row in the result set.
         // only assert here to remove ide warning
         assert key[0] != null;
         return key[0];
-      });
+      });*/
+    }
+
+    try {
+      countDownLatch.await();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    for (DatabaseCall call : scans) {
       // grep the keySet from the map, which contains only the pseudonyms
       pseudonyms.add(
-          tableData.keySet().stream().map(Object::toString).collect(Collectors.toList())
+          call.resultMap.keySet().stream().map(Object::toString).collect(Collectors.toList())
       );
-      data.add(new ArrayList<>(tableData.values()));
+      data.add(new ArrayList<>(call.resultMap.values()));
     }
     // get connection to the converter
     ConverterConnection client = ScrambledbConfig.INSTANCE.getConverterConnection(context);

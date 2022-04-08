@@ -17,36 +17,67 @@
 
 package org.apache.calcite.scrambledb;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.tools.RelRunner;
+import org.apache.calcite.DataContext;
+import org.apache.calcite.adapter.jdbc.JdbcTable;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class DatabaseCall implements Runnable {
 
-  private volatile ResultSet resultSet = null;
+  public ResultSet resultSet = null;
+  public Map<Object, Object[]> resultMap = null;
 
-  private final ThreadLocal<PreparedStatement> statementThreadLocal;
+  private ThreadLocal<PreparedStatement> statementThreadLocal = null;
+
+  private ThreadLocal<JdbcTable> tableThreadLocal = null;
+  private ThreadLocal<DataContext> dataContextThreadLocal = null;
+
   private final boolean expectResult;
+
+  private CountDownLatch countDownLatch;
 
   public DatabaseCall(
       PreparedStatement statement,
       boolean expectResult) {
+    this.statementThreadLocal = ThreadLocal.withInitial(() -> statement);;
+    this.expectResult = expectResult;
+  }
 
-      this.statementThreadLocal = ThreadLocal.withInitial(() -> statement);;
-      this.expectResult = expectResult;
+  public DatabaseCall(
+      JdbcTable table,
+      DataContext dataContext,
+      boolean expectResult,
+      CountDownLatch countDownLatch
+  ) {
+    this.tableThreadLocal = ThreadLocal.withInitial(() -> table);
+    this.dataContextThreadLocal = ThreadLocal.withInitial(() -> dataContext);
+    this.expectResult = expectResult;
+    this.countDownLatch = countDownLatch;
   }
 
   private void execute() throws SQLException {
-    PreparedStatement p = this.statementThreadLocal.get();
-    if(expectResult) {
-      this.resultSet = p.executeQuery();
+    if (this.statementThreadLocal != null) {
+      PreparedStatement p = this.statementThreadLocal.get();
+      if (expectResult) {
+        this.resultSet = p.executeQuery();
+      } else {
+        p.execute();
+      }
+      p.close();
     } else {
-      p.execute();
+      JdbcTable table = this.tableThreadLocal.get();
+      DataContext dataContext = this.dataContextThreadLocal.get();
+      this.resultMap = table.scan(dataContext).toMap(key -> {
+        // there should always be at least one element for each row in the result set.
+        // only assert here to remove ide warning
+        assert key[0] != null;
+        return key[0];
+      });
     }
-    p.close();
   }
 
   @Override
@@ -55,6 +86,9 @@ public class DatabaseCall implements Runnable {
       execute();
     } catch (SQLException e) {
       e.printStackTrace();
+    }
+    if (countDownLatch != null) {
+      this.countDownLatch.countDown();
     }
   }
 
