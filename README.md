@@ -14,7 +14,7 @@ are used in order to preserve the utility of the data.
 
 The JDBC driver is on part of the ScrambleBD setup. It will be used to grep
 data form database and interact with the
-[converter](https://github.com/n1ckl0sk0rtge/converter) to join data.
+[converter](https://github.com/n1ckl0sk0rtge/ScrambleDB-Converter) to join data.
 
 ScrambleDB is build on top of apache calcite, which
 is a dynamic data management framework.
@@ -39,7 +39,7 @@ This section contains the steps needed to get scrambleDB Work.
 
 ScrambleDB contains two components, a converter and the scrambleDB jdbc driver. Before using the jdbc driver
 the converter has to be deployed. The easiest way to do so, is to create a docker image from the provided Dockerfile
-in the [converter repository](https://github.com/n1ckl0sk0rtge/converter). The converter itself has a redis instance
+in the [converter repository](https://github.com/n1ckl0sk0rtge/ScrambleDB-Converter). The converter itself has a redis instance
 as an dependency which also has to be deployed.
 
 The scrambleDB driver and the converter will communicate over REST. When using the rest communication nothing more
